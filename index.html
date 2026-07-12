@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="tr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematiksel Formül Oluşturucu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', }
+    </script>
+    
+    <!-- Yüksek Kaliteli PNG Çıktısı için MathJax ve html-to-image -->
+    <script>
+        window.MathJax = {
+            startup: { typeset: false }, // Otomatik render'ı kapatıp kontrolü ele alıyoruz
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            chtml: { scale: 1, mtextInheritFont: true }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    
+    <!-- GÖRSEL (TIKLA-YAZ) EDİTÖR İÇİN MATHLIVE -->
+    <script src="https://unpkg.com/mathlive"></script>
+
+    <style>
+        /* Görsel Editördeki etkileşimli kutucukların ve imlecin stili */
+        math-field {
+            --contains-highlight-background: transparent;
+            --caret-color: #2563eb;
+            --selection-background-color: #bfdbfe;
+            --selection-color: #000000;
+            border: none;
+            outline: none;
+            width: 100%;
+            text-align: center;
+        }
+        math-field::part(virtual-keyboard-toggle) {
+            display: none; /* Sanal klavye butonunu gizle */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+
+    <div class="flex flex-col md:flex-row h-screen w-full overflow-hidden">
+        
+        <!-- Sol Panel: Şablonlar -->
+        <div class="w-full md:w-1/4 h-1/3 md:h-full bg-white dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 p-4 overflow-y-auto">
+            <h2 class="font-bold mb-4 text-lg">Şablonlar ve Semboller</h2>
+            <div id="templateContainer" class="space-y-4"></div>
+        </div>
+
+        <!-- Orta Panel: Düzenleyici -->
+        <div class="w-full md:w-2/4 h-1/3 md:h-full flex flex-col p-6 overflow-y-auto relative">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">Formül Düzenleyici</h1>
+                <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition shadow-sm hover:scale-105">🌙/☀️</button>
+            </div>
+            
+            <!-- Kod Alanı: Her Zaman Bembeyaz (Senkronize Çalışır) -->
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">LaTeX Kodu (İzleme ve Düzenleme)</label>
+            <textarea id="latexInput" class="w-full h-24 p-4 border border-gray-300 rounded-lg font-mono text-base mb-4 text-black bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all" placeholder="Görsel alana tıklayıp yazın veya kod girin..."></textarea>
+            
+            <!-- TIKLA-YAZ GÖRSEL EDİTÖR (MathLive) -->
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 mt-2">Görsel Editör (Tıklayıp Düzenleyin)</label>
+            <div id="previewContainer" class="flex-grow bg-white border border-gray-200 rounded-lg flex items-center justify-center p-8 shadow-inner overflow-auto min-h-[200px] cursor-text transition-colors">
+                <math-field id="mathPreview" class="text-4xl" style="color: #000000;"></math-field>
+            </div>
+        </div>
+
+        <!-- Sağ Panel: Ayarlar -->
+        <div class="w-full md:w-1/4 h-1/3 md:h-full bg-white dark:bg-gray-800 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700 p-6 overflow-y-auto">
+            <h2 class="font-bold mb-6 text-lg">Stil Ayarları</h2>
+            
+            <!-- Yazı Tipi -->
+            <div class="mb-6">
+                <label class="block text-sm mb-2 opacity-80">Yazı Tipi</label>
+                <select id="fontFamily" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                    <option value="serif">Serif (Klasik Matematik)</option>
+                    <option value="sans-serif">Sans-Serif (Düz/Modern)</option>
+                </select>
+                <p class="text-[10px] opacity-60 mt-1 italic">* Yazı tipi değişimi indirilen PNG'de görünür.</p>
+            </div>
+
+            <!-- Yazı Boyutu -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm opacity-80">Yazı Boyutu</label>
+                    <span id="fontSizeLabel" class="text-sm font-mono font-bold text-blue-600">(24px)</span>
+                </div>
+                <input type="range" id="fontSize" min="10" max="100" value="24" class="w-full accent-blue-600 cursor-pointer">
+            </div>
+            
+            <!-- Yazı Rengi Seçici (Pop-up Mantığı) -->
+            <div class="mb-8 relative">
+                <div class="flex items-center gap-3 mb-2">
+                    <label class="block text-sm opacity-80">Yazı Rengi</label>
+                    <div id="colorDisplay" class="w-8 h-8 rounded border-2 border-gray-300 cursor-pointer shadow-sm hover:scale-105 transition-transform" style="background-color: #000000;"></div>
+                </div>
+
+                <!-- Renk Paleti Pop-up -->
+                <div id="colorPopup" class="hidden absolute top-10 right-0 md:left-0 w-64 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 z-50">
+                    <div id="colorGrid" class="grid grid-cols-5 gap-2 mb-4"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold opacity-60">HEX:</span>
+                        <input type="text" id="hexInput" value="#000000" class="w-full p-1.5 border border-gray-300 dark:border-gray-600 rounded text-center font-mono text-sm bg-gray-50 dark:bg-gray-700 outline-none uppercase">
+                    </div>
+                </div>
+            </div>
+
+            <button id="downloadBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-bold shadow-md flex justify-center items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                PNG Olarak İndir
+            </button>
+        </div>
+    </div>
+
+    <!-- Hata Modalı (Eksik Parantez / Syntax Hataları İçin) -->
+    <div id="errorModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-red-100 dark:border-red-900/50">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <span class="text-2xl">⚠️</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">İndirme İptal Edildi</h3>
+            </div>
+            <p id="errorModalMessage" class="text-gray-600 dark:text-gray-300 mb-6 text-sm"></p>
+            <button onclick="document.getElementById('errorModal').classList.add('hidden')" class="w-full bg-gray-900 dark:bg-gray-600 text-white font-bold py-2.5 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-500 transition">Anladım</button>
+        </div>
+    </div>
+
+    <script>
+        // İstenilen tam sembol listesi
+        const categories = {
+            "TEMEL ŞABLONLAR": [
+                "\\frac{\\square}{\\square}", "{\\square}^{2}", "{\\square}^{3}", "{\\square}^{\\square}", 
+                "\\sqrt{\\square}", "\\sqrt[3]{\\square}", "\\sqrt[\\square]{\\square}", "|\\square|", 
+                "\\left( \\square \\right)", "\\left[ \\square \\right]", "\\left\\{ \\square \\right\\}", 
+                "{\\square}_{\\square}", "\\int \\square dx", "\\sum \\square", "\\prod \\square", 
+                "\\lim_{\\square \\to \\square} \\square", "\\log_{\\square} \\square", 
+                "\\overrightarrow{\\square}", "\\overline{\\square}", "\\overleftrightarrow{\\square}", 
+                "\\vec{\\square}", "\\overset{\\frown}{\\square}"
+            ],
+            "ARİTMETİK & CEBİR": ["+", "-", "\\times", ".", "\\div", ":", "=", "\\neq", "<", ">", "\\leq", "\\geq", "\\approx", "\\cong", "\\equiv", "\\propto", "\\pm", "\\infty", "\\%", "!", "n!"],
+            "TRİGONOMETRİ & FONKSİYONLAR": ["\\sin", "\\cos", "\\tan", "\\cot", "\\sec", "\\csc", "\\arcsin", "\\arccos", "\\arctan", "\\log", "\\ln", "\\exp"],
+            "ANALİZ & CALCULUS": ["\\int", "\\iint", "\\iiint", "\\oint", "\\sum", "\\prod", "\\lim", "\\sup", "\\inf", "\\frac{d}{dx}", "\\partial", "\\nabla"],
+            "KÜMELER & MANTIK": ["\\in", "\\notin", "\\subset", "\\subseteq", "\\not\\subset", "\\supset", "\\supseteq", "\\cup", "\\cap", "\\setminus", "\\emptyset", "\\forall", "\\exists", "\\neg", "\\wedge", "\\vee", "\\Rightarrow", "\\Leftrightarrow"],
+            "GEOMETRİ & VEKTÖRLER": ["^\\circ", "\\angle", "\\perp", "\\parallel", "\\triangle", "\\rightarrow", "\\vec{v}", "\\overrightarrow{AB}", "\\overline{AB}", "\\overleftrightarrow{AB}", "\\overset{\\frown}{AB}", "\\sim"],
+            "YUNAN ALFABESİ": ["\\alpha", "\\beta", "\\gamma", "\\delta", "\\pi", "\\sigma", "\\theta", "\\lambda", "\\phi", "\\omega", "\\Delta", "\\Omega"]
+        };
+
+        const standardColors = [
+            "#000000", "#333333", "#666666", "#999999", "#CCCCCC",
+            "#FF0000", "#FF4500", "#FF8C00", "#FFD700", "#ADFF2F",
+            "#008000", "#008B8B", "#00CED1", "#1E90FF", "#0000CD",
+            "#4B0082", "#8A2BE2", "#FF1493", "#FF69B4", "#8B4513",
+            "#FFFFFF", "#F5F5F5", "#FFE4E1", "#E6E6FA", "#F0FFFF"
+        ];
+
+        let currentColor = "#000000";
+        const mf = document.getElementById('mathPreview');
+        const latexInput = document.getElementById('latexInput');
+        const templateContainer = document.getElementById('templateContainer');
+
+        // Hata Mesajı Gösterme Fonksiyonu
+        function showError(msg) {
+            document.getElementById('errorModalMessage').innerText = msg;
+            document.getElementById('errorModal').classList.remove('hidden');
+        }
+
+        // Şablonları Yükleme ve MathJax ile Görüntüleme
+        Object.keys(categories).forEach(cat => {
+            const div = document.createElement('div');
+            div.innerHTML = `<h3 class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">${cat}</h3>`;
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-5 gap-1";
+            categories[cat].forEach(tex => {
+                const btn = document.createElement('button');
+                
+                // Uzun şablonlar için butonu genişletme (col-span-2)
+                let extraClass = "";
+                if (tex.includes("\\lim") || tex.includes("\\log") || tex.includes("\\int \\square dx") || tex.includes("\\overleftrightarrow") || tex.includes("\\overrightarrow")) {
+                    extraClass = " col-span-2";
+                }
+                
+                btn.className = "bg-gray-100 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 p-1.5 rounded text-[11px] text-center border border-gray-200 dark:border-gray-600 transition flex items-center justify-center" + extraClass;
+                btn.innerHTML = `\\(${tex}\\)`;
+                
+                // Tıklandığında \square yerine \placeholder{} koyarak görsel editöre ekle
+                btn.onclick = () => { 
+                    const interactiveTex = tex.replace(/\\square/g, '\\placeholder{}');
+                    mf.executeCommand(['insert', interactiveTex]);
+                    mf.focus(); // Tıkladıktan sonra doğrudan yazmaya hazır olsun
+                };
+                grid.appendChild(btn);
+            });
+            div.appendChild(grid);
+            templateContainer.appendChild(div);
+        });
+
+        // Sayfa yüklendiğinde butonların içindeki şablonları render et
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.MathJax) {
+                    MathJax.typesetPromise([templateContainer]);
+                }
+            }, 500);
+        });
+
+        // Tema Yönetimi
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.onclick = () => document.documentElement.classList.toggle('dark');
+
+        // Renk Paleti Yönetimi
+        const colorDisplay = document.getElementById('colorDisplay');
+        const colorPopup = document.getElementById('colorPopup');
+        const colorGrid = document.getElementById('colorGrid');
+        const hexInput = document.getElementById('hexInput');
+
+        standardColors.forEach(color => {
+            const btn = document.createElement('div');
+            btn.className = "w-8 h-8 rounded border border-gray-300 cursor-pointer hover:scale-110 transition-transform shadow-sm";
+            btn.style.backgroundColor = color;
+            btn.onclick = (e) => { 
+                e.stopPropagation(); 
+                applyColor(color); 
+            };
+            colorGrid.appendChild(btn);
+        });
+
+        function applyColor(hex) {
+            currentColor = hex;
+            colorDisplay.style.backgroundColor = hex;
+            hexInput.value = hex.toUpperCase();
+            mf.style.color = hex;
+            colorPopup.classList.add('hidden');
+        }
+
+        colorDisplay.onclick = (e) => {
+            e.stopPropagation();
+            colorPopup.classList.toggle('hidden');
+        };
+
+        // Boşluğa tıklayınca pop-up'ı kapat
+        document.addEventListener('click', (e) => {
+            if (!colorPopup.contains(e.target) && e.target !== colorDisplay) {
+                colorPopup.classList.add('hidden');
+            }
+        });
+
+        // Hex girişi ile renk değiştirme
+        hexInput.onchange = (e) => {
+            let val = e.target.value.trim();
+            if(!val.startsWith('#')) val = '#' + val;
+            if(/^#[0-9A-F]{6}$/i.test(val)) applyColor(val);
+        };
+
+        // ====== ÇİFT YÖNLÜ SENKRONİZASYON (Görsel Editör <-> Kod Alanı) ======
+        
+        // 1. Görsel editörde tıkla-yaz yaparken kod alanını güncelle
+        mf.addEventListener('input', () => {
+            let latex = mf.getValue('latex');
+            // Kullanıcı \placeholder kutularını dolduruyorsa, kodda \square olarak temizleyelim
+            latexInput.value = latex.replace(/\\placeholder\{.*?\}/g, '\\square');
+        });
+
+        // 2. Kullanıcı inatla kod alanından yazıyorsa görsel editörü güncelle
+        latexInput.addEventListener('input', () => {
+            let latex = latexInput.value;
+            // Kod alanındaki \square ları tekrar etkileşimli kutulara çevir
+            mf.setValue(latex.replace(/\\square/g, '\\placeholder{}'));
+        });
+
+        // Yazı Boyutu Değişimi
+        document.getElementById('fontSize').oninput = (e) => {
+            const size = e.target.value;
+            document.getElementById('fontSizeLabel').innerText = `(${size}px)`;
+            mf.style.fontSize = size + "px";
+        };
+
+        // ====== YÜKSEK KALİTELİ PNG İNDİRME (GÜNCELLENMİŞ VE KARARLI YAPI) ======
+        document.getElementById('downloadBtn').onclick = () => {
+            const btn = document.getElementById('downloadBtn');
+            const originalText = btn.innerHTML;
+            
+            // --- 1. Aşama: Kod Hata Ön Kontrolü ---
+            let latexCodeRaw = mf.getValue('latex');
+            const leftCount = (latexCodeRaw.match(/\\left/g) || []).length;
+            const rightCount = (latexCodeRaw.match(/\\right/g) || []).length;
+            
+            if (leftCount !== rightCount) {
+                showError("Eksik veya kapatılmamış boyutlandırılabilir parantez (\\left ve \\right eşleşmiyor). Lütfen formülü kontrol edin.");
+                return;
+            }
+            
+            let strippedLatex = latexCodeRaw.replace(/\\{/g, "").replace(/\\}/g, "");
+            const openBraceCount = (strippedLatex.match(/\{/g) || []).length;
+            const closeBraceCount = (strippedLatex.match(/\}/g) || []).length;
+            
+            if (openBraceCount !== closeBraceCount) {
+                showError("Kapatılmamış gruplama parantezi ({ ve } eşleşmiyor). Lütfen formülü kontrol edin.");
+                return;
+            }
+            // ------------------------------------
+
+            // Kullanıcıya işlem yapıldığını göster
+            btn.innerHTML = `<span class="animate-pulse">Hazırlanıyor...</span>`;
+            
+            const fontSizeVal = document.getElementById('fontSize').value;
+            const fontFam = document.getElementById('fontFamily').value;
+            
+            // Dışa aktarma için gizli ama boyutları hesaplanabilir bir ortam yaratıyoruz
+            const exportWrapper = document.createElement('div');
+            exportWrapper.style.position = 'absolute';
+            exportWrapper.style.left = '0px';
+            exportWrapper.style.top = '0px';
+            exportWrapper.style.zIndex = '-9999'; // Kullanıcı görmeyecek şekilde arkada
+            exportWrapper.style.backgroundColor = '#ffffff'; // Şeffaflık olmaması için
+            exportWrapper.style.padding = '50px'; // Formül etrafında güzel bir boşluk
+            exportWrapper.style.color = currentColor;
+            exportWrapper.style.fontSize = fontSizeVal + 'px';
+            exportWrapper.style.display = 'inline-block';
+            exportWrapper.style.minWidth = '100px'; // Sıfır boyutta kalmasını engelliyoruz
+            exportWrapper.style.minHeight = '50px';
+            
+            // MathLive içindeki kodları al ve \placeholder'ları kalıcı \square yap
+            let latexCode = mf.getValue('latex').replace(/\\placeholder\{.*?\}/g, '\\square');
+            
+            // Eğer Sans-Serif (Modern) font seçildiyse MathType mantığıyla formülü zorla
+            if (fontFam === 'sans-serif' && latexCode.trim() !== '') {
+                latexCode = `\\mathsf{${latexCode}}`;
+            }
+
+            exportWrapper.innerHTML = `$$${latexCode}$$`;
+            document.body.appendChild(exportWrapper);
+
+            // Export alanını yüksek kaliteli MathJax ile render et
+            MathJax.typesetPromise([exportWrapper]).then(() => {
+                
+                // --- 2. Aşama: MathJax Render Hata Kontrolü ---
+                if (exportWrapper.querySelector('[data-mjx-error]')) {
+                    showError("Formülün LaTeX dizilişinde (syntax) anlaşılamayan bir hata var. Hatalı komutları veya eksik alanları düzeltin.");
+                    document.body.removeChild(exportWrapper);
+                    btn.innerHTML = originalText;
+                    return;
+                }
+                // ----------------------------------------------
+
+                // MathJax fontlarının DOM'a tam yerleşmesi ve boyutların kesinleşmesi için ufak bir bekleme (300ms)
+                setTimeout(() => {
+                    htmlToImage.toPng(exportWrapper, { 
+                        backgroundColor: '#ffffff', 
+                        pixelRatio: 4, // Ultra Yüksek Çözünürlük
+                        style: {
+                            // Çekim sırasında absolute pozisyonun kırpılma yapmasını engelliyoruz
+                            position: 'relative',
+                            left: 'auto',
+                            top: 'auto',
+                            zIndex: '1'
+                        }
+                    })
+                    .then(dataUrl => {
+                        const link = document.createElement('a');
+                        link.download = 'formulum.png';
+                        link.href = dataUrl;
+                        link.click();
+                        
+                        // İşlem bitince DOM'u temizle ve butonu eski haline getir
+                        document.body.removeChild(exportWrapper);
+                        btn.innerHTML = originalText;
+                    })
+                    .catch(error => {
+                        console.error('İndirme sırasında html-to-image hatası!', error);
+                        document.body.removeChild(exportWrapper);
+                        btn.innerHTML = originalText;
+                        showError("İndirme sırasında bir grafik hatası oluştu. Lütfen tekrar deneyin.");
+                    });
+                }, 300);
+            }).catch(error => {
+                console.error('MathJax render hatası!', error);
+                document.body.removeChild(exportWrapper);
+                btn.innerHTML = originalText;
+                showError("Formül oluşturulurken sistemsel bir hata oluştu.");
+            });
+        };
+
+    </script>
+    
+    <!-- Geliştirici İmzası -->
+    <a href="https://instagram.com/berrusagir" target="_blank" rel="noopener noreferrer" class="fixed bottom-2 right-3 text-[11px] text-gray-400 dark:text-gray-600 hover:text-blue-500 font-medium z-50 tracking-wider transition-colors cursor-pointer">
+        Berru Sağır
+    </a>
+</body>
+</html>
