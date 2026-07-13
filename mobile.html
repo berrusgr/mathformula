@@ -282,6 +282,12 @@
 </head>
 <body class="bg-slate-50 dark:bg-darkbg text-slate-900 dark:text-slate-100 h-screen flex flex-col overflow-hidden transition-colors duration-300">
 
+    <!-- Error Debug Banner for Mobile -->
+    <div id="jsErrorBanner" class="hidden fixed top-0 inset-x-0 bg-red-600 text-white p-3.5 text-xs font-mono z-[10000] flex justify-between items-center shadow-lg">
+        <span id="jsErrorMessage" class="break-all pr-2"></span>
+        <button onclick="document.getElementById('jsErrorBanner').classList.add('hidden')" class="bg-red-800 hover:bg-red-900 px-2.5 py-1.5 rounded text-[10px] font-bold">KAPAT</button>
+    </div>
+
     <!-- Header Panel -->
     <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex justify-between items-center shadow-sm shrink-0">
         <div class="flex items-center gap-1">
@@ -345,7 +351,7 @@
             <!-- Panel 2: Style (Hidden by default) -->
             <div id="panelStyle" class="hidden space-y-4">
                 <!-- Yazı Tipi -->
-                <div>
+                <div id="fontSelectWrapper">
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Yazı Tipi (Font Family)</label>
                     <select id="fontFamily" class="w-full p-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 rounded-lg text-xs outline-none cursor-pointer">
                         <option value="Poppins" selected>Poppins (Modern Sans-serif)</option>
@@ -438,6 +444,17 @@
     </div>
 
     <script>
+        // Error handler for mobile debugging
+        window.onerror = function(message, source, lineno, colno, error) {
+            const banner = document.getElementById('jsErrorBanner');
+            const msgSpan = document.getElementById('jsErrorMessage');
+            if (banner && msgSpan) {
+                msgSpan.innerText = `Hata: ${message} (Satır: ${lineno}:${colno})`;
+                banner.classList.remove('hidden');
+            }
+            return false;
+        };
+
         // ====== CONTEXT & DATA DEFINITIONS ======
         const categories = {
             "Matematik": [
