@@ -44,6 +44,7 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://unpkg.com/mathlive"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <style>
         /* General styling */
@@ -523,6 +524,24 @@
                     <div class="grid grid-cols-2 gap-2" id="bgOptionGrid">
                         <button data-bg="transparent" class="bg-transparent border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 transition active-bg-btn" style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;">Şeffaf</button>
                         <button data-bg="#ffffff" class="bg-white border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center text-slate-900 shadow-sm transition">Beyaz</button>
+                    </div>
+                </div>
+
+                <!-- Görselden Formüle Çevirici (OCR) -->
+                <div class="border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                        <span>📷</span> Görselden LaTeX'e Çevir (OCR)
+                    </label>
+                    <div id="ocrDropzone" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center min-h-[90px] relative overflow-hidden">
+                        <input type="file" id="ocrFileInput" class="hidden" accept="image/*">
+                        <div id="ocrPrompt" class="space-y-1">
+                            <p class="text-xs font-bold text-slate-650 dark:text-slate-300">Resim Seçin veya Yapıştırın</p>
+                            <p class="text-[9px] text-slate-400 dark:text-slate-500">Ctrl + V ile ekran görüntüsü yapıştırabilirsiniz</p>
+                        </div>
+                        <div id="ocrPreviewContainer" class="hidden w-full flex flex-col items-center">
+                            <img id="ocrPreviewImage" class="max-h-24 object-contain rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs mb-2">
+                            <button id="ocrAnalyzeBtn" class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow active:scale-[0.98] transition">Görseli Analiz Et (Çevir)</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1575,6 +1594,158 @@
                 mf.focus();
                 mf.executeCommand(['insert', '\\ ']); // Inserts LaTeX space
             }
+        };
+
+        // ====== OPTICAL CHARACTER RECOGNITION (OCR) ENGINE ======
+        const ocrDropzone = document.getElementById('ocrDropzone');
+        const ocrFileInput = document.getElementById('ocrFileInput');
+        const ocrPrompt = document.getElementById('ocrPrompt');
+        const ocrPreviewContainer = document.getElementById('ocrPreviewContainer');
+        const ocrPreviewImage = document.getElementById('ocrPreviewImage');
+        const ocrAnalyzeBtn = document.getElementById('ocrAnalyzeBtn');
+        let selectedOcrFile = null;
+
+        ocrDropzone.onclick = (e) => {
+            if (e.target !== ocrAnalyzeBtn) {
+                ocrFileInput.click();
+            }
+        };
+
+        ocrFileInput.onchange = (e) => {
+            if (e.target.files.length > 0) {
+                handleOcrImage(e.target.files[0]);
+            }
+        };
+
+        ocrDropzone.ondragover = (e) => {
+            e.preventDefault();
+            ocrDropzone.classList.add('border-blue-500', 'bg-blue-50/20');
+        };
+        ocrDropzone.ondragleave = () => {
+            ocrDropzone.classList.remove('border-blue-500', 'bg-blue-50/20');
+        };
+        ocrDropzone.ondrop = (e) => {
+            e.preventDefault();
+            ocrDropzone.classList.remove('border-blue-500', 'bg-blue-50/20');
+            if (e.dataTransfer.files.length > 0) {
+                handleOcrImage(e.dataTransfer.files[0]);
+            }
+        };
+
+        // Document-wide paste handler
+        document.addEventListener('paste', (e) => {
+            // Check if user is typing in standard text inputs
+            if (document.activeElement === latexInput || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                return;
+            }
+            const items = e.clipboardData.items;
+            for (let item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    const file = item.getAsFile();
+                    handleOcrImage(file);
+                    break;
+                }
+            }
+        });
+
+        function handleOcrImage(file) {
+            selectedOcrFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                ocrPreviewImage.src = e.target.result;
+                ocrPrompt.classList.add('hidden');
+                ocrPreviewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function convertOcrTextToLatex(text) {
+            let lines = text.split('\n');
+            let processedLines = lines.map(line => {
+                let clean = line.trim();
+                if (!clean) return '';
+                
+                clean = clean
+                    .replace(/≤/g, '\\le ')
+                    .replace(/<=\s*/g, '\\le ')
+                    .replace(/≥/g, '\\ge ')
+                    .replace(/>=\s*/g, '\\ge ')
+                    .replace(/⇔/g, '\\iff ')
+                    .replace(/<=>/g, '\\iff ')
+                    .replace(/⇒/g, '\\Rightarrow ')
+                    .replace(/=>/g, '\\Rightarrow ')
+                    .replace(/→/g, '\\to ')
+                    .replace(/->/g, '\\to ')
+                    .replace(/±/g, '\\pm ')
+                    .replace(/\*/g, ' \\times ');
+                
+                return processWordsToTextCommand(clean);
+            });
+            
+            processedLines = processedLines.filter(l => l.length > 0);
+            return processedLines.join(' \\\\ ');
+        }
+
+        function processWordsToTextCommand(str) {
+            const mathCommands = ['le', 'ge', 'iff', 'times', 'cdot', 'pm', 'infty', 'div', 'frac', 'sqrt', 'sin', 'cos', 'tan', 'log', 'ln', 'text', 'cases', 'begin', 'end', 'gather', 'Delta', 'Omega', 'alpha', 'beta', 'gamma', 'delta', 'pi', 'sigma', 'theta', 'lambda', 'phi', 'omega'];
+            let result = '';
+            let i = 0;
+            while (i < str.length) {
+                if (str[i] === '\\') {
+                    let j = i + 1;
+                    while (j < str.length && /[a-zA-Z]/.test(str[j])) {
+                        j++;
+                    }
+                    result += str.substring(i, j);
+                    i = j;
+                } else if (/[a-zA-Z\u00c0-\u017f]/.test(str[i])) {
+                    let j = i;
+                    while (j < str.length && /[a-zA-Z\u00c0-\u017f]/.test(str[j])) {
+                        j++;
+                    }
+                    let word = str.substring(i, j);
+                    if (word.length >= 2 && !mathCommands.includes(word)) {
+                        result += `\\text{${word}}`;
+                    } else {
+                        result += word;
+                    }
+                    i = j;
+                } else {
+                    result += str[i];
+                    i++;
+                }
+            }
+            return result;
+        }
+
+        ocrAnalyzeBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (!selectedOcrFile) return;
+
+            const originalBtnText = ocrAnalyzeBtn.innerHTML;
+            ocrAnalyzeBtn.disabled = true;
+            ocrAnalyzeBtn.innerHTML = `<span class="animate-pulse flex items-center justify-center gap-1">⚡ Analiz Ediliyor...</span>`;
+
+            Tesseract.recognize(
+                ocrPreviewImage.src,
+                'tur+eng',
+                { logger: m => console.log(m) }
+            ).then(({ data: { text } }) => {
+                let latex = convertOcrTextToLatex(text);
+                setMathfieldValue(latex);
+                updatePreview();
+                
+                ocrAnalyzeBtn.innerHTML = '✅ Tamamlandı!';
+                setTimeout(() => {
+                    ocrAnalyzeBtn.disabled = false;
+                    ocrAnalyzeBtn.innerHTML = originalBtnText;
+                }, 2000);
+            }).catch(err => {
+                console.error("OCR error:", err);
+                showError("Görsel okunurken bir hata oluştu.");
+                ocrAnalyzeBtn.disabled = false;
+                ocrAnalyzeBtn.innerHTML = originalBtnText;
+            });
         };
 
         // Initialize default formula value in editor
