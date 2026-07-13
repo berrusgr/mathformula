@@ -1665,6 +1665,7 @@
                 let clean = line.trim();
                 if (!clean) return '';
                 
+                // OCR Cleanups
                 clean = clean
                     .replace(/≤/g, '\\le ')
                     .replace(/<=\s*/g, '\\le ')
@@ -1677,7 +1678,15 @@
                     .replace(/→/g, '\\to ')
                     .replace(/->/g, '\\to ')
                     .replace(/±/g, '\\pm ')
-                    .replace(/\*/g, ' \\times ');
+                    .replace(/÷/g, ' \\div ')
+                    .replace(/\*/g, ' \\times ')
+                    // Match standalone multiplication 'x' or 'X' surrounded by uppercase letters or spaces (like A x B -> A \times B)
+                    .replace(/([A-Z])\s*[xX]\s*([A-Z])/g, '$1 \\times $2')
+                    .replace(/\s+[xX]\s+/g, ' \\times ')
+                    // Match dot used as multiplication (e.g. 3.4.5 -> 3 \cdot 4 \cdot 5 or s(A).s(B) -> s(A) \cdot s(B))
+                    .replace(/([0-9a-zA-Z\)])\.([0-9a-zA-Z\(])/g, '$1 \\cdot $2')
+                    // Match colons between numbers used as division
+                    .replace(/([0-9])\s*:\s*([0-9])/g, '$1 \\div $2');
                 
                 return processWordsToTextCommand(clean);
             });
@@ -1688,7 +1697,9 @@
 
         function processWordsToTextCommand(str) {
             const mathCommands = ['le', 'ge', 'iff', 'times', 'cdot', 'pm', 'infty', 'div', 'frac', 'sqrt', 'sin', 'cos', 'tan', 'log', 'ln', 'text', 'cases', 'begin', 'end', 'gather', 'Delta', 'Omega', 'alpha', 'beta', 'gamma', 'delta', 'pi', 'sigma', 'theta', 'lambda', 'phi', 'omega'];
-            let result = '';
+            const mathOperators = /[=\+\-\*\/<>\(\)\[\]\{\}\|≤≥⇔⇒→±÷:]/;
+            
+            let tokens = [];
             let i = 0;
             while (i < str.length) {
                 if (str[i] === '\\') {
@@ -1696,23 +1707,35 @@
                     while (j < str.length && /[a-zA-Z]/.test(str[j])) {
                         j++;
                     }
-                    result += str.substring(i, j);
+                    tokens.push({ type: 'math', val: str.substring(i, j) });
                     i = j;
-                } else if (/[a-zA-Z\u00c0-\u017f]/.test(str[i])) {
+                } else if (mathOperators.test(str[i])) {
+                    tokens.push({ type: 'math', val: str[i] });
+                    i++;
+                } else {
                     let j = i;
-                    while (j < str.length && /[a-zA-Z\u00c0-\u017f]/.test(str[j])) {
+                    while (j < str.length && str[j] !== '\\' && !mathOperators.test(str[j])) {
                         j++;
                     }
-                    let word = str.substring(i, j);
-                    if (word.length >= 2 && !mathCommands.includes(word)) {
-                        result += `\\text{${word}}`;
-                    } else {
-                        result += word;
-                    }
+                    let val = str.substring(i, j);
+                    tokens.push({ type: 'text-candidate', val: val });
                     i = j;
+                }
+            }
+            
+            let result = '';
+            for (let tok of tokens) {
+                if (tok.type === 'math') {
+                    result += tok.val;
                 } else {
-                    result += str[i];
-                    i++;
+                    let hasWords = /[a-zA-Z\u00c0-\u017f]{2,}/.test(tok.val);
+                    if (hasWords) {
+                        // Wrap the whole sequence of words and spaces in a single \text{} block!
+                        // This preserves spaces and punctuation beautifully.
+                        result += `\\text{${tok.val}}`;
+                    } else {
+                        result += tok.val;
+                    }
                 }
             }
             return result;
