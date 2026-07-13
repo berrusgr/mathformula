@@ -396,7 +396,9 @@
         <!-- Sol Panel: Şablonlar ve Semboller (Sol Sütun) -->
         <div class="w-full lg:w-1/4 h-2/5 lg:h-full bg-white dark:bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-5 overflow-y-auto flex flex-col">
             <div class="flex items-center gap-2 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand-600 dark:text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5.5 w-5.5 text-brand-600 dark:text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                </svg>
                 <h2 class="font-bold text-lg tracking-tight">Sembol ve Şablonlar</h2>
             </div>
             
@@ -630,7 +632,12 @@
                 btn.className = "key-button p-2 text-slate-750 dark:text-slate-350 transition flex items-center justify-center min-h-[44px]" + extraClass;
                 
                 // Color placeholders (\square) dynamically in blue for high-contrast combinations
-                let displayTex = tex.replace(/\\square/g, '\\color{#2563eb}{\\blacksquare}');
+                let displayTex;
+                if (tex.includes("\\text")) {
+                    displayTex = tex.replace(/\\square/g, 'metin');
+                } else {
+                    displayTex = tex.replace(/\\square/g, '\\color{#2563eb}{\\blacksquare}');
+                }
                 
                 if (desc) {
                     btn.innerHTML = `
