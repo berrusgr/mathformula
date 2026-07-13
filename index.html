@@ -92,6 +92,44 @@
         math-field::part(virtual-keyboard-toggle) {
             display: none;
         }
+
+        /* 3D Keyboard Key styling for sidebar buttons */
+        .key-button {
+            position: relative;
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-shadow: 0 2.5px 0 0 #cbd5e1;
+            transform: translateY(0);
+            transition: all 0.05s ease;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .key-button:hover {
+            background-color: #f8fafc;
+            transform: translateY(0.5px);
+            box-shadow: 0 2px 0 0 #cbd5e1;
+        }
+        .key-button:active {
+            transform: translateY(2.5px);
+            box-shadow: 0 0 0 0 #cbd5e1;
+        }
+
+        /* Dark mode keyboard keys */
+        .dark .key-button {
+            background-color: #1e293b;
+            border-color: #475569;
+            box-shadow: 0 2.5px 0 0 #0f172a;
+        }
+        .dark .key-button:hover {
+            background-color: #334155;
+            transform: translateY(0.5px);
+            box-shadow: 0 2px 0 0 #0f172a;
+        }
+        .dark .key-button:active {
+            transform: translateY(2.5px);
+            box-shadow: 0 0 0 0 #0f172a;
+        }
         
         /* ====== CUSTOM CSS MATH RENDERER ENGINE STYLES ====== */
         .math-render-root {
@@ -516,7 +554,20 @@
             "ANALİZ & CALCULUS": ["\\int", "\\iint", "\\iiint", "\\oint", "\\sum", "\\prod", "\\lim", "\\sup", "\\inf", "\\frac{d}{dx}", "\\partial", "\\nabla"],
             "KÜMELER & MANTIK": ["\\in", "\\notin", "\\subset", "\\subseteq", "\\supset", "\\supseteq", "\\cup", "\\cap", "\\setminus", "\\emptyset", "\\forall", "\\exists", "\\neg", "\\wedge", "\\vee", "\\Rightarrow", "\\Leftrightarrow"],
             "GEOMETRİ & VEKTÖRLER": ["^\\circ", "\\angle", "\\perp", "\\parallel", "\\triangle", "\\rightarrow", "\\vec{v}", "\\overrightarrow{AB}", "\\overline{AB}", "\\sim"],
-            "YUNAN ALFABESİ": ["\\alpha", "\\beta", "\\gamma", "\\delta", "\\pi", "\\sigma", "\\theta", "\\lambda", "\\phi", "\\omega", "\\Delta", "\\Omega"]
+            "YUNAN ALFABESİ": [
+                { tex: "\\alpha", desc: "alpha" },
+                { tex: "\\beta", desc: "beta" },
+                { tex: "\\gamma", desc: "gamma" },
+                { tex: "\\delta", desc: "delta" },
+                { tex: "\\pi", desc: "pi" },
+                { tex: "\\sigma", desc: "sigma" },
+                { tex: "\\theta", desc: "theta" },
+                { tex: "\\lambda", desc: "lambda" },
+                { tex: "\\phi", desc: "phi" },
+                { tex: "\\omega", desc: "omega" },
+                { tex: "\\Delta", desc: "delta cap" },
+                { tex: "\\Omega", desc: "omega cap" }
+            ]
         };
 
         const standardColors = [
@@ -563,17 +614,34 @@
             const div = document.createElement('div');
             div.innerHTML = `<h3 class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">${cat}</h3>`;
             const grid = document.createElement('div');
-            grid.className = "grid grid-cols-5 gap-1.5";
-            categories[cat].forEach(tex => {
+            grid.className = "grid grid-cols-5 gap-2 pb-3";
+            
+            categories[cat].forEach(item => {
                 const btn = document.createElement('button');
+                
+                let tex = typeof item === 'object' ? item.tex : item;
+                let desc = typeof item === 'object' ? item.desc : null;
                 
                 let extraClass = "";
                 if (tex.includes("\\lim") || tex.includes("\\log") || tex.includes("\\int") || tex.includes("\\overrightarrow") || tex.includes("\\text")) {
                     extraClass = " col-span-2";
                 }
                 
-                btn.className = "bg-slate-50 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700/80 p-2 rounded-lg text-xs text-center border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center justify-center shadow-xs" + extraClass;
-                btn.innerHTML = `\\(${tex}\\)`;
+                btn.className = "key-button p-2 text-slate-750 dark:text-slate-350 transition flex items-center justify-center min-h-[44px]" + extraClass;
+                
+                // Color placeholders (\square) dynamically in blue for high-contrast combinations
+                let displayTex = tex.replace(/\\square/g, '\\color{#2563eb}{\\blacksquare}');
+                
+                if (desc) {
+                    btn.innerHTML = `
+                        <div class="flex flex-col items-center justify-center w-full">
+                            <span class="text-xs font-semibold mb-0.5">\\(${displayTex}\\)</span>
+                            <span class="text-[8px] opacity-45 dark:opacity-60 uppercase font-mono tracking-wider">${desc}</span>
+                        </div>
+                    `;
+                } else {
+                    btn.innerHTML = `\\(${displayTex}\\)`;
+                }
                 
                 btn.onclick = () => { 
                     const interactiveTex = tex.replace(/\\square/g, '\\placeholder{}');
