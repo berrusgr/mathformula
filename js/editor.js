@@ -145,9 +145,13 @@ Object.keys(categories).forEach(cat => {
         }
 
         btn.onclick = () => {
-            const interactiveTex = tex.replace(/\\square/g, '\\placeholder{}');
-            mf.executeCommand(['insert', interactiveTex]);
-            mf.focus();
+            if (tex === "\\text{\\square}") {
+                openTextModal();
+            } else {
+                const interactiveTex = tex.replace(/\\square/g, '\\placeholder{}');
+                mf.executeCommand(['insert', interactiveTex]);
+                mf.focus();
+            }
         };
         grid.appendChild(btn);
     });
@@ -556,3 +560,42 @@ document.getElementById('addSpaceBtn').onclick = () => {
 
 // Initialize default formula value in editor
 setMathfieldValue("\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}");
+
+// Metin Giriş Modalı İşlemleri (Text Input Modal Controls)
+const textInputModal = document.getElementById('textInputModal');
+const modalTextInput = document.getElementById('modalTextInput');
+const closeTextModalBtn = document.getElementById('closeTextModalBtn');
+const submitTextModalBtn = document.getElementById('submitTextModalBtn');
+
+function openTextModal() {
+    if (textInputModal && modalTextInput) {
+        modalTextInput.value = "";
+        // Seçilen yazı tipini modal alanına da uygula
+        const selectedFont = fontFamily ? fontFamily.value : 'Poppins';
+        modalTextInput.style.fontFamily = `'${selectedFont}', sans-serif`;
+        textInputModal.classList.remove('hidden');
+        modalTextInput.focus();
+    }
+}
+
+function closeTextModal() {
+    if (textInputModal) {
+        textInputModal.classList.add('hidden');
+    }
+}
+
+if (closeTextModalBtn) {
+    closeTextModalBtn.onclick = closeTextModal;
+}
+
+if (submitTextModalBtn) {
+    submitTextModalBtn.onclick = () => {
+        const textVal = modalTextInput.value.trim();
+        if (textVal && mf) {
+            // Metin ifadesini latex \text{...} formatında ekle
+            mf.executeCommand(['insert', `\\text{${textVal}}`]);
+            updatePreview();
+        }
+        closeTextModal();
+    };
+}
