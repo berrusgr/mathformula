@@ -392,8 +392,9 @@ function updatePreview() {
 
         // Reset scale and styles first
         fontSampleText.style.transform = 'none';
-        fontSampleText.style.width = '100%';
+        fontSampleText.style.width = 'max-content';
         fontSampleText.style.display = 'block';
+        fontSampleText.style.justifyContent = currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center');
 
         // Dynamic scaling to fit sidebar preview box perfectly
         const containerWidth = fontSamplePreview.clientWidth - 24; // 12px padding on each side
@@ -403,6 +404,8 @@ function updatePreview() {
             fontSampleText.style.transform = `scale(${scale})`;
             fontSampleText.style.transformOrigin = currentAlignment === 'left' ? 'left top' : (currentAlignment === 'right' ? 'right top' : 'center top');
             fontSampleText.style.width = `${100 / scale}%`; // Adjust wrapper width to prevent visual layout collapse
+        } else {
+            fontSampleText.style.width = '100%';
         }
     }
 
