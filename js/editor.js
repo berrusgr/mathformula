@@ -76,6 +76,24 @@ let currentAlignment = "center"; // Default alignment centered
 
 // Element references
 const mf = document.getElementById('mathPreview');
+mf.mathModeSpace = '\\ '; // Allows spacebar to insert spaces anywhere in the formula
+
+const addNewlineBtn = document.getElementById('addNewlineBtn');
+if (addNewlineBtn) {
+    addNewlineBtn.onclick = () => {
+        mf.executeCommand(['insert', '\\\\ ']);
+        mf.focus();
+    };
+}
+
+const addSpaceBtn = document.getElementById('addSpaceBtn');
+if (addSpaceBtn) {
+    addSpaceBtn.onclick = () => {
+        mf.executeCommand(['insert', '\\quad ']);
+        mf.focus();
+    };
+}
+
 const latexInput = document.getElementById('latexInput');
 const templateContainer = document.getElementById('templateContainer');
 const renderMode = document.getElementById('renderMode');
@@ -365,7 +383,10 @@ function updatePreview() {
         cleanLatex = cleanLatex.substring(0, cleanLatex.length - '\\end{gather}'.length).trim();
     }
 
-    latexInput.value = cleanLatex.replace(/\\placeholder\{.*?\}/g, '\\square');
+    // Sadece eğer kullanıcı şu an latexInput'a yazı yazmıyorsa üzerine yaz (İmleç kaymasını ve boşluk silinmesini önler)
+    if (document.activeElement !== latexInput) {
+        latexInput.value = cleanLatex.replace(/\\placeholder\{.*?\}/g, '\\square');
+    }
 
     const mode = renderMode.value;
     const selectedFont = fontFamily.value;
