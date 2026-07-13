@@ -1,0 +1,512 @@
+// ====== RECURSIVE LaTeX TO CSS FLEXBOX PARSER & COMPILER ======
+
+// 1. Tokenizer
+function tokenize(str) {
+    let i = 0;
+    const tokens = [];
+    while (i < str.length) {
+        const c = str[i];
+        if (c === '{') {
+            tokens.push({ type: 'OPEN', val: '{' });
+            i++;
+        } else if (c === '}') {
+            tokens.push({ type: 'CLOSE', val: '}' });
+            i++;
+        } else if (c === '_') {
+            tokens.push({ type: 'SUB', val: '_' });
+            i++;
+        } else if (c === '^') {
+            tokens.push({ type: 'SUP', val: '^' });
+            i++;
+        } else if (c === '\\') {
+            let j = i + 1;
+            if (j < str.length && (str[j] === '(' || str[j] === ')' || str[j] === '[' || str[j] === ']' || str[j] === '{' || str[j] === '}' || str[j] === ',' || str[j] === ';' || str[j] === '!' || str[j] === '\\' || str[j] === '|' || str[j] === ' ')) {
+                tokens.push({ type: 'COMMAND', val: '\\' + str[j] });
+                i = j + 1;
+            } else {
+                while (j < str.length && /[a-zA-Z]/.test(str[j])) {
+                    j++;
+                }
+                tokens.push({ type: 'COMMAND', val: str.substring(i, j) });
+                i = j;
+            }
+        } else if (/\s/.test(c)) {
+            tokens.push({ type: 'SPACE', val: ' ' });
+            i++;
+        } else {
+            tokens.push({ type: 'CHAR', val: c });
+            i++;
+        }
+    }
+    return tokens;
+}
+
+// 2. Parser (Recursive descent)
+function parse(tokens) {
+    let index = 0;
+
+    function peek() {
+        return tokens[index];
+    }
+
+    function next() {
+        return tokens[index++];
+    }
+
+    function parseExpression() {
+        const nodes = [];
+        while (index < tokens.length) {
+            const tok = peek();
+            if (!tok) break;
+            if (tok.type === 'CLOSE') {
+                break;
+            }
+            nodes.push(parseNode());
+        }
+        return nodes;
+    }
+
+    function parseGroup() {
+        next(); // consume OPEN {
+        const content = parseExpression();
+        if (peek() && peek().type === 'CLOSE') {
+            next(); // consume CLOSE }
+        }
+        return content;
+    }
+
+    function parseArgument() {
+        const tok = peek();
+        if (!tok) return [];
+        if (tok.type === 'OPEN') {
+            return parseGroup();
+        }
+        return [parseNode()];
+    }
+
+    function parseNode() {
+        const tok = next();
+        if (!tok) return { type: 'text', val: '' };
+
+        if (tok.type === 'OPEN') {
+            const content = parseExpression();
+            if (peek() && peek().type === 'CLOSE') {
+                next();
+            }
+            return checkSubSup({ type: 'group', content });
+        }
+
+        if (tok.type === 'COMMAND') {
+            if (tok.val === '\\frac') {
+                const num = parseArgument();
+                const den = parseArgument();
+                return checkSubSup({ type: 'frac', num, den });
+            } else if (tok.val === '\\sqrt') {
+                let rootIndex = null;
+                if (peek() && peek().type === 'CHAR' && peek().val === '[') {
+                    next(); // consume '['
+                    rootIndex = [];
+                    while (index < tokens.length && !(peek().type === 'CHAR' && peek().val === ']')) {
+                        rootIndex.push(parseNode());
+                    }
+                    if (peek() && peek().val === ']') {
+                        next(); // consume ']'
+                    }
+                }
+                const content = parseArgument();
+                return checkSubSup({ type: 'root', index: rootIndex, content });
+            } else if (tok.val === '\\left') {
+                const leftBracket = next();
+                const content = [];
+                while (index < tokens.length) {
+                    const t = peek();
+                    if (t && t.type === 'COMMAND' && t.val === '\\right') {
+                        next(); // consume \right
+                        break;
+                    }
+                    content.push(parseNode());
+                }
+                const rightBracket = next();
+                return checkSubSup({ type: 'bracket', left: leftBracket, right: rightBracket, content });
+            } else if (tok.val === '\\begin') {
+                const envTok = parseArgument();
+                const envName = envTok.map(n => n.val || '').join('');
+
+                const contentTokens = [];
+                let depth = 1;
+                while (index < tokens.length) {
+                    const t = peek();
+                    if (t && t.type === 'COMMAND' && t.val === '\\begin') {
+                        contentTokens.push(next());
+                        depth++;
+                    } else if (t && t.type === 'COMMAND' && t.val === '\\end') {
+                        const lookaheadIndex = index;
+                        index++; // consume \end
+                        const endEnv = parseArgument();
+                        const endEnvName = endEnv.map(n => n.val || '').join('');
+                        if (endEnvName === envName) {
+                            depth--;
+                            if (depth === 0) {
+                                break;
+                            }
+                        }
+                        contentTokens.push(t);
+                        contentTokens.push(...tokens.slice(lookaheadIndex + 1, index));
+                    } else {
+                        contentTokens.push(next());
+                    }
+                }
+
+                // Split content by rows (\\\\) and columns (&)
+                const rows = [];
+                let currentRow = [];
+                let currentCellTokens = [];
+
+                for (let t of contentTokens) {
+                    if (t.type === 'COMMAND' && t.val === '\\\\') {
+                        currentRow.push(parse(currentCellTokens));
+                        rows.push(currentRow);
+                        currentRow = [];
+                        currentCellTokens = [];
+                    } else if (t.type === 'CHAR' && t.val === '&') {
+                        currentRow.push(parse(currentCellTokens));
+                        currentCellTokens = [];
+                    } else {
+                        currentCellTokens.push(t);
+                    }
+                }
+                if (currentCellTokens.length > 0 || currentRow.length > 0) {
+                    currentRow.push(parse(currentCellTokens));
+                    rows.push(currentRow);
+                }
+
+                return checkSubSup({ type: 'matrix', env: envName, rows });
+            } else if (tok.val === '\\vec') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'decorator', dec: 'vec', content });
+            } else if (tok.val === '\\overline') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'decorator', dec: 'overline', content });
+            } else if (tok.val === '\\overrightarrow') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'decorator', dec: 'vector-arrow', content });
+            } else if (tok.val === '\\hat') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'decorator', dec: 'hat', content });
+            } else if (tok.val === '\\text') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'text-group', content });
+            } else {
+                return checkSubSup({ type: 'command', val: tok.val });
+            }
+        }
+
+        if (tok.type === 'SUB' || tok.type === 'SUP') {
+            const arg = parseArgument();
+            return { type: tok.type === 'SUB' ? 'sub' : 'sup', base: [{ type: 'text', val: '' }], val: arg };
+        }
+
+        return checkSubSup({ type: 'text', val: tok.val });
+    }
+
+    function checkSubSup(node) {
+        let sub = null;
+        let sup = null;
+
+        while (index < tokens.length) {
+            const nextTok = peek();
+            if (nextTok && nextTok.type === 'SUB') {
+                next();
+                sub = parseArgument();
+            } else if (nextTok && nextTok.type === 'SUP') {
+                next();
+                sup = parseArgument();
+            } else {
+                break;
+            }
+        }
+
+        if (sub && sup) {
+            return { type: 'subsup', base: [node], sub, sup };
+        } else if (sub) {
+            return { type: 'sub', base: [node], sub };
+        } else if (sup) {
+            return { type: 'sup', base: [node], sup };
+        }
+        return node;
+    }
+
+    return parseExpression();
+}
+
+// 3. Render Nodes to HTML
+const COMMAND_MAPPING = {
+    '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\pi': 'π', '\\sigma': 'σ',
+    '\\theta': 'θ', '\\lambda': 'λ', '\\phi': 'φ', '\\omega': 'ω', '\\Delta': 'Δ', '\\Omega': 'Ω',
+    '\\epsilon': 'ε', '\\eta': 'η', '\\iota': 'ι', '\\kappa': 'κ', '\\mu': 'μ', '\\nu': 'ν',
+    '\\xi': 'ξ', '\\rho': 'ρ', '\\tau': 'τ', '\\upsilon': 'υ', '\\chi': 'χ', '\\psi': 'ψ',
+    '\\Gamma': 'Γ', '\\Theta': 'Θ', '\\Lambda': 'Λ', '\\Xi': 'Ξ', '\\Pi': 'Π', '\\Sigma': 'Σ',
+    '\\Upsilon': 'Υ', '\\Phi': 'Φ', '\\Psi': 'Ψ',
+
+    '\\times': '×', '\\div': '÷', '\\pm': '±', '\\infty': '∞', '\\approx': '≈', '\\neq': '≠',
+    '\\leq': '≤', '\\geq': '≥', '\\cong': '≅', '\\equiv': '≡', '\\propto': '∝',
+    '\\cdot': '·', '\\cdotp': '·', '\\ldots': '…', '\\cdots': '⋯', '\\ddots': '⋱', '\\vdots': '⋮',
+
+    '\\in': '∈', '\\notin': '∉', '\\subset': '⊂', '\\subseteq': '⊆', '\\supset': '⊃', '\\supseteq': '⊇',
+    '\\cup': '∪', '\\cap': '∩', '\\setminus': '∖', '\\emptyset': '∅',
+    '\\forall': '∀', '\\exists': '∃', '\\neg': '¬', '\\wedge': '∧', '\\vee': '∨',
+    '\\Rightarrow': '⇒', '\\Leftrightarrow': '⇔', '\\to': '→', '\\gets': '←', '\\rightarrow': '→', '\\leftarrow': '←',
+
+    '\\partial': '∂', '\\nabla': '∇', '\\angle': '∠', '\\perp': '⊥', '\\parallel': '∥',
+    '\\triangle': '△', '\\sim': '∼',
+
+    '\\quad': '<span style="margin-right: 0.8em; display: inline-block;"></span>',
+    '\\qquad': '<span style="margin-right: 1.6em; display: inline-block;"></span>',
+    '\\,': '<span style="margin-right: 0.15em; display: inline-block;"></span>',
+    '\\:': '<span style="margin-right: 0.22em; display: inline-block;"></span>',
+    '\\;': '<span style="margin-right: 0.27em; display: inline-block;"></span>',
+    '\\ ': '<span style="margin-right: 0.25em; display: inline-block;"></span>',
+    '\\\\': '<br/>',
+
+    '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan', '\\cot': 'cot', '\\sec': 'sec', '\\csc': 'csc',
+    '\\arcsin': 'arcsin', '\\arccos': 'arccos', '\\arctan': 'arctan', '\\log': 'log', '\\ln': 'ln', '\\exp': 'exp',
+};
+
+function isLimitOperator(baseNodes) {
+    if (baseNodes.length === 1 && baseNodes[0].type === 'command') {
+        const val = baseNodes[0].val;
+        return val === '\\sum' || val === '\\prod' || val === '\\lim';
+    }
+    return false;
+}
+
+function renderNodesToHtml(nodes, isNormalText = false) {
+    return nodes.map(node => {
+        switch (node.type) {
+            case 'text':
+                let val = node.val;
+                if (val === ' ') return '&nbsp;';
+                if (!isNormalText && /^[a-zA-Z]$/.test(val)) {
+                    return `<span class="math-var">${val}</span>`;
+                }
+                return `<span>${val}</span>`;
+
+            case 'command':
+                if (node.val === '\\placeholder') {
+                    return `<span class="math-placeholder-box"></span>`;
+                }
+                const cmdVal = COMMAND_MAPPING[node.val] || node.val.replace(/^\\/, '');
+                if (node.val === '\\int') {
+                    return `<span class="math-operator-large math-integral">∫</span>`;
+                }
+                if (node.val === '\\sum') {
+                    return `<span class="math-operator-large math-sum">∑</span>`;
+                }
+                if (node.val === '\\prod') {
+                    return `<span class="math-operator-large math-prod">∏</span>`;
+                }
+                if (node.val === '\\lim') {
+                    return `<span class="math-operator-large math-lim">lim</span>`;
+                }
+
+                if (COMMAND_MAPPING[node.val]) {
+                    if (node.val.startsWith('\\quad') || node.val.startsWith('\\\\') || node.val.startsWith('\\ ')) {
+                        return cmdVal; // raw HTML spacer output
+                    }
+                    if (!/^[a-zA-Z]{3,}/.test(COMMAND_MAPPING[node.val])) {
+                        return `<span class="math-symbol">${cmdVal}</span>`;
+                    }
+                }
+                return `<span class="math-text-cmd">${cmdVal}</span>`;
+
+            case 'group':
+                return `<span class="math-group">${renderNodesToHtml(node.content, isNormalText)}</span>`;
+
+            case 'text-group':
+                return `<span class="math-text-normal">${renderNodesToHtml(node.content, true)}</span>`;
+
+            case 'frac':
+                return `<div class="math-frac">
+                    <div class="math-num">${renderNodesToHtml(node.num, isNormalText)}</div>
+                    <div class="math-den">${renderNodesToHtml(node.den, isNormalText)}</div>
+                </div>`;
+
+            case 'sub':
+                if (isLimitOperator(node.base)) {
+                    return `<div class="math-limits-op-wrap">
+                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                        <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                    </div>`;
+                }
+                return `<span class="math-sub-wrap">
+                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                    <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                </span>`;
+
+            case 'sup':
+                if (isLimitOperator(node.base)) {
+                    return `<div class="math-limits-op-wrap">
+                        <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                    </div>`;
+                }
+                return `<span class="math-sup-wrap">
+                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                    <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                </span>`;
+
+            case 'subsup':
+                if (isLimitOperator(node.base)) {
+                    return `<div class="math-limits-op-wrap">
+                        <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                        <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                    </div>`;
+                }
+                return `<span class="math-subsup-wrap">
+                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                    <span class="math-scripts">
+                        <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                        <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                    </span>
+                </span>`;
+
+            case 'root':
+                const rootContentHtml = renderNodesToHtml(node.content, isNormalText);
+                if (node.index && node.index.length > 0) {
+                    const indexHtml = renderNodesToHtml(node.index, isNormalText);
+                    return `<div class="math-root">
+                        <span class="math-root-index">${indexHtml}</span>
+                        <div class="math-root-symbol-wrap">
+                            <svg class="math-root-svg" viewBox="0 0 10 20" preserveAspectRatio="none">
+                                <path d="M 1,12 L 3,12 L 6,18 L 10,0" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+                            </svg>
+                        </div>
+                        <div class="math-root-content">${rootContentHtml}</div>
+                    </div>`;
+                }
+                return `<div class="math-root">
+                    <div class="math-root-symbol-wrap">
+                        <svg class="math-root-svg" viewBox="0 0 10 20" preserveAspectRatio="none">
+                            <path d="M 1,12 L 3,12 L 6,18 L 10,0" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+                        </svg>
+                    </div>
+                    <div class="math-root-content">${rootContentHtml}</div>
+                </div>`;
+
+            case 'bracket':
+                const leftBracketSym = node.left ? (node.left.val || node.left) : '(';
+                const rightBracketSym = node.right ? (node.right.val || node.right) : ')';
+
+                let leftSvg = '';
+                let rightSvg = '';
+
+                if (leftBracketSym === '(') {
+                    leftSvg = `<path d="M 8,2 A 8,8 0 0,0 2,10 A 8,8 0 0,0 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                } else if (leftBracketSym === '[') {
+                    leftSvg = `<path d="M 8,2 L 3,2 L 3,18 L 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                } else if (leftBracketSym === '\\{' || leftBracketSym === '{') {
+                    leftSvg = `<path d="M 8,2 C 6,2 5,4 5,6 L 5,8 C 5,9.5 4,10 2,10 C 4,10 5,10.5 5,12 L 5,14 C 5,16 6,18 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                } else if (leftBracketSym === '|') {
+                    leftSvg = `<path d="M 5,2 L 5,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                } else {
+                    leftSvg = `<path d="M 8,2 A 8,8 0 0,0 2,10 A 8,8 0 0,0 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                }
+
+                if (rightBracketSym === ')') {
+                    rightSvg = `<path d="M 2,2 A 8,8 0 0,1 8,10 A 8,8 0 0,1 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                } else if (rightBracketSym === ']') {
+                    rightSvg = `<path d="M 2,2 L 7,2 L 7,18 L 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                } else if (rightBracketSym === '\\}' || rightBracketSym === '}') {
+                    rightSvg = `<path d="M 2,2 C 4,2 5,4 5,6 L 5,8 C 5,9.5 6,10 8,10 C 6,10 5,10.5 5,12 L 5,14 C 5,16 4,18 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                } else if (rightBracketSym === '|') {
+                    rightSvg = `<path d="M 5,2 L 5,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                } else {
+                    rightSvg = `<path d="M 2,2 A 8,8 0 0,1 8,10 A 8,8 0 0,1 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                }
+
+                return `<div class="math-bracket-wrap">
+                    <div class="math-bracket-symbol math-bracket-left">
+                        <svg viewBox="0 0 10 20" preserveAspectRatio="none" style="height: 100%; width: 100%;">${leftSvg}</svg>
+                    </div>
+                    <div class="math-bracket-content">${renderNodesToHtml(node.content, isNormalText)}</div>
+                    <div class="math-bracket-symbol math-bracket-right">
+                        <svg viewBox="0 0 10 20" preserveAspectRatio="none" style="height: 100%; width: 100%;">${rightSvg}</svg>
+                    </div>
+                </div>`;
+
+            case 'matrix':
+                let leftParen = '';
+                let rightParen = '';
+                if (node.env === 'pmatrix') {
+                    leftParen = '(';
+                    rightParen = ')';
+                } else if (node.env === 'bmatrix') {
+                    leftParen = '[';
+                    rightParen = ']';
+                } else if (node.env === 'vmatrix') {
+                    leftParen = '|';
+                    rightParen = '|';
+                }
+
+                const gridHtml = node.rows.map(row => {
+                    return `<div class="math-matrix-row">
+                        ${row.map(cell => `<div class="math-matrix-cell">${renderNodesToHtml(cell, isNormalText)}</div>`).join('')}
+                    </div>`;
+                }).join('');
+
+                // Apply custom alignment styles if the environment is a gather environment (our multi-line engine)
+                let alignStyle = '';
+                if (node.env === 'gather') {
+                    const alignFlex = currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center');
+                    alignStyle = ` style="align-items: ${alignFlex} !important;"`;
+                }
+
+                const matrixContent = `<div class="math-matrix"${alignStyle}>${gridHtml}</div>`;
+
+                if (leftParen || rightParen) {
+                    return renderNodesToHtml([{
+                        type: 'bracket',
+                        left: leftParen,
+                        right: rightParen,
+                        content: [{ type: 'custom-html', html: matrixContent }]
+                    }], isNormalText);
+                }
+
+                return matrixContent;
+
+            case 'decorator':
+                const innerHtml = renderNodesToHtml(node.content, isNormalText);
+                if (node.dec === 'vec' || node.dec === 'vector-arrow') {
+                    return `<span class="math-decorator-vec"><span class="math-dec-arrow">→</span><span class="math-dec-content">${innerHtml}</span></span>`;
+                }
+                if (node.dec === 'overline') {
+                    return `<span class="math-decorator-overline">${innerHtml}</span>`;
+                }
+                if (node.dec === 'hat') {
+                    return `<span class="math-decorator-hat"><span class="math-dec-hat">^</span><span class="math-dec-content">${innerHtml}</span></span>`;
+                }
+                return innerHtml;
+
+            case 'custom-html':
+                return node.html;
+
+            default:
+                return '';
+        }
+    }).join('');
+}
+
+function compileLatexToHtml(latex, fontFace, size, color) {
+    try {
+        const tokens = tokenize(latex);
+        const ast = parse(tokens);
+        const mathHtml = renderNodesToHtml(ast);
+        return `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color};">
+            ${mathHtml}
+        </div>`;
+    } catch (err) {
+        console.error("Custom parser error:", err);
+        return `<div class="text-red-500 text-xs italic">Formül parse edilemedi: ${err.message}</div>`;
+    }
+}

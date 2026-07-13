@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="tr" class="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matematiksel Tasarım & Formül Editörü</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -27,12 +28,14 @@
             }
         }
     </script>
-    
+
     <!-- Google Fonts for Web UI and Custom Math Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
     <!-- High-quality exports and MathLive / MathJax -->
     <script>
         window.MathJax = {
@@ -44,398 +47,76 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://unpkg.com/mathlive"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-    <style>
-        /* General styling */
-        body {
-            font-family: 'Poppins', 'Inter', sans-serif;
-        }
-        
-        /* Custom scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .dark ::-webkit-scrollbar-thumb {
-            background: #475569;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        /* Dark mode template symbols overrides */
-        .dark #templateContainer mjx-container,
-        .dark #templateContainer mjx-container * {
-            color: #f1f5f9 !important;
-            fill: #f1f5f9 !important;
-        }
-
-        /* MathLive adjustments */
-        math-field {
-            --contains-highlight-background: transparent;
-            --caret-color: #2563eb;
-            --selection-background-color: #bfdbfe;
-            --selection-color: #000000;
-            border: none;
-            outline: none;
-            width: 100%;
-            text-align: center;
-            background: transparent;
-        }
-        math-field::part(virtual-keyboard-toggle) {
-            display: none;
-        }
-
-        /* 3D Keyboard Key styling for sidebar buttons */
-        .key-button {
-            position: relative;
-            background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            box-shadow: 0 2.5px 0 0 #cbd5e1;
-            transform: translateY(0);
-            transition: all 0.05s ease;
-            font-size: 11px;
-            cursor: pointer;
-        }
-        .key-button:hover {
-            background-color: #f8fafc;
-            transform: translateY(0.5px);
-            box-shadow: 0 2px 0 0 #cbd5e1;
-        }
-        .key-button:active {
-            transform: translateY(2.5px);
-            box-shadow: 0 0 0 0 #cbd5e1;
-        }
-
-        /* Dark mode keyboard keys */
-        .dark .key-button {
-            background-color: #1e293b;
-            border-color: #475569;
-            box-shadow: 0 2.5px 0 0 #0f172a;
-        }
-        .dark .key-button:hover {
-            background-color: #334155;
-            transform: translateY(0.5px);
-            box-shadow: 0 2px 0 0 #0f172a;
-        }
-        .dark .key-button:active {
-            transform: translateY(2.5px);
-            box-shadow: 0 0 0 0 #0f172a;
-        }
-        
-        /* ====== CUSTOM CSS MATH RENDERER ENGINE STYLES ====== */
-        .math-render-root {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            line-height: 1.2;
-            user-select: none;
-        }
-        
-        /* Math variables and operators */
-        .math-var {
-            font-style: italic;
-            font-family: inherit;
-            padding: 0 0.05em;
-        }
-        .math-symbol {
-            font-family: inherit;
-            padding: 0 0.1em;
-        }
-        .math-text-cmd {
-            font-family: inherit;
-            font-style: normal;
-            font-weight: normal;
-            padding: 0 0.1em;
-        }
-        .math-operator-large {
-            font-family: inherit;
-            font-style: normal;
-            font-weight: normal;
-            display: inline-block;
-            transform: scale(1.35);
-            margin: 0 0.2em;
-        }
-        
-        /* Fractions */
-        .math-frac {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            vertical-align: middle;
-            margin: 0 0.2em;
-            line-height: 1;
-        }
-        .math-num {
-            border-bottom: 2px solid currentColor;
-            width: 100%;
-            text-align: center;
-            padding: 0 0.2em 0.08em 0.2em;
-            font-size: 0.9em;
-        }
-        .math-den {
-            width: 100%;
-            text-align: center;
-            padding: 0.08em 0.2em 0 0.2em;
-            font-size: 0.9em;
-        }
-        
-        /* Scripts (sub & sup) */
-        .math-sub-wrap, .math-sup-wrap, .math-subsup-wrap {
-            display: inline-flex;
-            align-items: center;
-            vertical-align: middle;
-        }
-        .math-base {
-            display: inline-block;
-        }
-        .math-sub {
-            font-size: 0.65em;
-            vertical-align: sub;
-            line-height: 1;
-            margin-left: 0.08em;
-            display: inline-block;
-        }
-        .math-sup {
-            font-size: 0.65em;
-            vertical-align: super;
-            line-height: 1;
-            margin-left: 0.08em;
-            display: inline-block;
-        }
-        .math-scripts {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: flex-start;
-            margin-left: 0.08em;
-            font-size: 0.65em;
-            line-height: 1;
-        }
-        .math-scripts .math-sup {
-            margin-left: 0;
-            margin-bottom: 0.15em;
-            font-size: 1em;
-        }
-        .math-scripts .math-sub {
-            margin-left: 0;
-            margin-top: 0.15em;
-            font-size: 1em;
-        }
-        
-        /* Vertical limits operators (sums, limits) */
-        .math-limits-op-wrap {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            vertical-align: middle;
-            margin: 0 0.2em;
-            line-height: 0.9;
-        }
-        .math-limit-top {
-            font-size: 0.6em;
-            display: block;
-            margin-bottom: 0.1em;
-            text-align: center;
-        }
-        .math-limit-bottom {
-            font-size: 0.6em;
-            display: block;
-            margin-top: 0.15em;
-            text-align: center;
-        }
-        .math-limit-base {
-            font-size: 1.45em;
-            line-height: 0.9;
-            display: block;
-            text-align: center;
-        }
-        
-        /* Square roots */
-        .math-root {
-            display: inline-flex;
-            align-items: stretch;
-            vertical-align: middle;
-            margin: 0 0.1em;
-            position: relative;
-        }
-        .math-root-index {
-            font-size: 0.55em;
-            align-self: flex-start;
-            margin-right: -0.38em;
-            margin-top: -0.05em;
-            z-index: 2;
-            font-weight: bold;
-        }
-        .math-root-symbol-wrap {
-            display: flex;
-            align-items: center;
-            position: relative;
-            width: 0.72em;
-            margin-right: -0.05em;
-        }
-        .math-root-svg {
-            position: absolute;
-            left: 0;
-            top: 0.12em;
-            width: 100%;
-            height: calc(100% - 0.12em);
-        }
-        .math-root-content {
-            border-top: 2px solid currentColor;
-            padding-top: 0.08em;
-            padding-left: 0.15em;
-            padding-right: 0.15em;
-            margin-top: 0.12em;
-        }
-        
-        /* Brackets / Parentheses */
-        .math-bracket-wrap {
-            display: inline-flex;
-            align-items: stretch;
-            vertical-align: middle;
-            margin: 0 0.05em;
-        }
-        .math-bracket-symbol {
-            width: 0.6em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .math-bracket-content {
-            padding: 0 0.15em;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* Matrix */
-        .math-matrix {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            vertical-align: middle;
-            margin: 0 0.25em;
-        }
-        .math-matrix-row {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-            margin: 0.12em 0;
-        }
-        .math-matrix-cell {
-            padding: 0.2em 0.45em;
-            text-align: center;
-            display: inline-block;
-            min-width: 1.6em;
-        }
-        
-        /* Decorators */
-        .math-decorator-vec {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            vertical-align: middle;
-            line-height: 0.8;
-            margin: 0 0.05em;
-        }
-        .math-dec-arrow {
-            font-size: 0.58em;
-            line-height: 0.8;
-            margin-bottom: -0.1em;
-            font-weight: normal;
-        }
-        .math-decorator-hat {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            vertical-align: middle;
-            line-height: 0.8;
-            margin: 0 0.05em;
-        }
-        .math-dec-hat {
-            font-size: 0.72em;
-            line-height: 0.8;
-            margin-bottom: -0.22em;
-            font-weight: normal;
-        }
-        .math-decorator-overline {
-            border-top: 1.5px solid currentColor;
-            padding-top: 0.06em;
-            display: inline-block;
-            margin: 0 0.05em;
-        }
-        .math-text-normal {
-            font-style: normal !important;
-        }
-        .math-placeholder-box {
-            display: inline-block;
-            width: 1.1em;
-            height: 1.1em;
-            border: 1px dashed currentColor;
-            opacity: 0.4;
-            border-radius: 0.15em;
-            vertical-align: middle;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="bg-slate-50 dark:bg-darkbg text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
 
     <div class="flex flex-col lg:flex-row h-screen w-full overflow-hidden">
-        
+
         <!-- Sol Panel: Şablonlar ve Semboller (Sol Sütun) -->
-        <div class="w-full lg:w-1/4 h-2/5 lg:h-full bg-white dark:bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-5 overflow-y-auto flex flex-col">
+        <div
+            class="w-full lg:w-1/4 h-2/5 lg:h-full bg-white dark:bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-5 overflow-y-auto flex flex-col">
             <div class="flex items-center mb-4">
                 <h2 class="font-bold text-lg tracking-tight">Sembol ve Şablonlar</h2>
             </div>
-            
+
             <div id="templateContainer" class="space-y-6 flex-grow"></div>
         </div>
 
         <!-- Orta Panel: Düzenleyici ve Canlı Önizleme -->
-        <div class="w-full lg:w-2/4 h-3/5 lg:h-full flex flex-col p-6 overflow-y-auto bg-slate-50 dark:bg-slate-950 relative border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800">
+        <div
+            class="w-full lg:w-2/4 h-3/5 lg:h-full flex flex-col p-6 overflow-y-auto bg-slate-50 dark:bg-slate-950 relative border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center mb-6">
                 <div class="flex flex-col">
-                    <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">Matematiksel Editör</h1>
-                    <p class="text-xs text-slate-400 dark:text-slate-500">Formüllerinizi dilediğiniz fontla tasarlayın</p>
+                    <h1
+                        class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                        Matematiksel Editör</h1>
+                    <p class="text-xs text-slate-400 dark:text-slate-500">Formüllerinizi dilediğiniz fontla tasarlayın
+                    </p>
                 </div>
-                <button id="themeToggle" class="p-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition shadow-sm hover:scale-105" title="Karanlık/Aydınlık Mod">🌙/☀️</button>
+                <button id="themeToggle"
+                    class="p-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition shadow-sm hover:scale-105"
+                    title="Karanlık/Aydınlık Mod">🌙/☀️</button>
             </div>
-            
+
             <!-- Kod Alanı -->
             <div class="mb-4">
-                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">LaTeX Kodu (İzleme ve Manuel Giriş)</label>
-                <textarea id="latexInput" class="w-full h-20 p-3 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-sm mb-2 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all" placeholder="Görsel alana yazın veya buraya LaTeX kodu girin..."></textarea>
+                <label
+                    class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">LaTeX
+                    Kodu (İzleme ve Manuel Giriş)</label>
+                <textarea id="latexInput"
+                    class="w-full h-20 p-3 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-sm mb-2 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all"
+                    placeholder="Görsel alana yazın veya buraya LaTeX kodu girin..."></textarea>
             </div>
-            
+
             <!-- Görsel Tasarım & Düzenleme Alanı -->
             <div class="flex-grow flex flex-col">
-                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Görsel Tasarım & Düzenleme Alanı (Düzenlemek İçin Tıklayın)</label>
-                <div id="designPreviewContainer" class="flex-grow bg-white border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center p-8 shadow-inner overflow-auto min-h-[220px] transition-all relative cursor-text hover:border-slate-300 dark:hover:border-slate-700">
+                <label
+                    class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Görsel
+                    Tasarım & Düzenleme Alanı (Düzenlemek İçin Tıklayın)</label>
+                <div id="designPreviewContainer"
+                    class="flex-grow bg-white border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center p-8 shadow-inner overflow-auto min-h-[220px] transition-all relative cursor-text hover:border-slate-300 dark:hover:border-slate-700">
                     <!-- Dinamik olarak seçilen renge göre arka plan deseni/grid eklenebilir -->
-                    <div id="formulaGridBg" class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 16px 16px;"></div>
-                    
+                    <div id="formulaGridBg" class="absolute inset-0 pointer-events-none opacity-20"
+                        style="background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 16px 16px;">
+                    </div>
+
                     <div class="z-10 w-full flex items-center justify-center transition-all duration-300">
-                        <math-field id="mathPreview" class="text-3xl w-full" style="color: #000000;" multiline></math-field>
+                        <math-field id="mathPreview" class="text-3xl w-full" style="color: #000000;"
+                            multiline></math-field>
                     </div>
                 </div>
-                
+
                 <!-- Workspace Utility Bar -->
                 <div class="flex gap-2.5 mt-2.5 shrink-0">
-                    <button id="addNewlineBtn" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-xs active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                    <button id="addNewlineBtn"
+                        class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-xs active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 text-slate-700 dark:text-slate-200">
                         <span>⏎</span> Alt Satıra Geç (Yeni Satır)
                     </button>
-                    <button id="addSpaceBtn" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-xs active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                    <button id="addSpaceBtn"
+                        class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-xs active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 text-slate-700 dark:text-slate-200">
                         <span>⌴</span> Boşluk Ekle
                     </button>
                 </div>
@@ -443,19 +124,23 @@
         </div>
 
         <!-- Sağ Panel: Stil Ayarları ve İndirme Butonu -->
-        <div class="w-full lg:w-1/4 h-auto lg:h-full bg-white dark:bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 p-6 overflow-y-auto flex flex-col justify-between">
+        <div
+            class="w-full lg:w-1/4 h-auto lg:h-full bg-white dark:bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 p-6 overflow-y-auto flex flex-col justify-between">
             <div class="space-y-6">
                 <div>
-                    <h2 class="font-bold text-lg tracking-tight mb-1 text-slate-900 dark:text-white">Tasarım Ayarları</h2>
+                    <h2 class="font-bold text-lg tracking-tight mb-1 text-slate-900 dark:text-white">Tasarım Ayarları
+                    </h2>
                     <p class="text-xs text-slate-400 dark:text-slate-500">Formülün görsel stilini özelleştirin</p>
                 </div>
-                
+
                 <hr class="border-slate-100 dark:border-slate-800">
-                
+
                 <!-- Render Modu Seçimi -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Çizim Motoru (Render Engine)</label>
-                    <select id="renderMode" class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Çizim Motoru
+                        (Render Engine)</label>
+                    <select id="renderMode"
+                        class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition">
                         <option value="custom" selected>Özel Tasarım Modu (Özel Yazı Tipleri)</option>
                         <option value="mathjax">Klasik Matematik (MathJax TeX)</option>
                     </select>
@@ -463,8 +148,10 @@
 
                 <!-- Yazı Tipi Seçimi -->
                 <div id="fontSelectWrapper">
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Yazı Tipi (Font Family)</label>
-                    <select id="fontFamily" class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Yazı Tipi (Font
+                        Family)</label>
+                    <select id="fontFamily"
+                        class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition">
                         <option value="Poppins" selected>Poppins (Modern Sans-serif)</option>
                         <option value="Inter">Inter (Temiz Sans-serif)</option>
                         <option value="Montserrat">Montserrat (Geometrik)</option>
@@ -473,8 +160,11 @@
                         <option value="Times New Roman">Times New Roman (Klasik Serif)</option>
                     </select>
                     <!-- Font sample preview -->
-                    <div id="fontSamplePreview" class="mt-2.5 p-3 border border-slate-200 dark:border-slate-800 rounded-xl select-none text-[11px] font-medium text-slate-500 dark:text-slate-400 transition-all duration-300 flex flex-col items-center bg-white" style="background-color: #ffffff;">
-                        <span class="mb-1.5 text-[9px] uppercase tracking-wider opacity-60">PNG Çıktı Görünümü (Sidebar Önizleme):</span>
+                    <div id="fontSamplePreview"
+                        class="mt-2.5 p-3 border border-slate-200 dark:border-slate-800 rounded-xl select-none text-[11px] font-medium text-slate-500 dark:text-slate-400 transition-all duration-300 flex flex-col items-center bg-white"
+                        style="background-color: #ffffff;">
+                        <span class="mb-1.5 text-[9px] uppercase tracking-wider opacity-60">PNG Çıktı Görünümü (Sidebar
+                            Önizleme):</span>
                         <div class="w-full overflow-x-auto flex justify-center py-1" id="fontSampleText"></div>
                     </div>
                 </div>
@@ -483,64 +173,87 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Yazı Boyutu</label>
-                        <span id="fontSizeLabel" class="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">(24px)</span>
+                        <span id="fontSizeLabel"
+                            class="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">(24px)</span>
                     </div>
-                    <input type="range" id="fontSize" min="16" max="120" value="24" class="w-full accent-blue-600 cursor-pointer">
+                    <input type="range" id="fontSize" min="16" max="120" value="24"
+                        class="w-full accent-blue-600 cursor-pointer">
                 </div>
-                
+
                 <!-- Yazı Rengi -->
                 <div class="relative">
                     <div class="flex items-center justify-between mb-2">
                         <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Yazı Rengi</label>
                         <div class="flex items-center gap-2">
-                            <div id="colorDisplay" class="w-7 h-7 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer shadow-sm hover:scale-110 transition-transform" style="background-color: #000000;"></div>
+                            <div id="colorDisplay"
+                                class="w-7 h-7 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer shadow-sm hover:scale-110 transition-transform"
+                                style="background-color: #000000;"></div>
                             <span id="colorHexText" class="text-xs font-mono font-semibold opacity-60">#000000</span>
                         </div>
                     </div>
 
                     <!-- Renk Paleti Pop-up -->
-                    <div id="colorPopup" class="hidden absolute right-0 top-8 w-60 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50">
+                    <div id="colorPopup"
+                        class="hidden absolute right-0 top-8 w-60 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50">
                         <div id="colorGrid" class="grid grid-cols-5 gap-2 mb-3"></div>
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] font-bold opacity-60">HEX:</span>
-                            <input type="text" id="hexInput" value="#000000" class="w-full p-1 border border-slate-200 dark:border-slate-700 rounded text-center font-mono text-xs bg-slate-50 dark:bg-slate-900 outline-none uppercase text-slate-800 dark:text-slate-100">
+                            <input type="text" id="hexInput" value="#000000"
+                                class="w-full p-1 border border-slate-200 dark:border-slate-700 rounded text-center font-mono text-xs bg-slate-50 dark:bg-slate-900 outline-none uppercase text-slate-800 dark:text-slate-100">
                         </div>
                     </div>
                 </div>
 
                 <!-- Formül Hizalaması -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Formül Hizalaması (Alignment)</label>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Formül Hizalaması
+                        (Alignment)</label>
                     <div class="grid grid-cols-3 gap-2" id="alignOptionGrid">
-                        <button data-align="left" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center text-slate-750 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs">⬅️ Sola</button>
-                        <button data-align="center" class="bg-white dark:bg-slate-800 border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center text-slate-900 dark:text-white transition shadow-sm">↔️ Orta</button>
-                        <button data-align="right" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center text-slate-750 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs">➡️ Sağa</button>
+                        <button data-align="left"
+                            class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center text-slate-750 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs">⬅️
+                            Sola</button>
+                        <button data-align="center"
+                            class="bg-white dark:bg-slate-800 border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center text-slate-900 dark:text-white transition shadow-sm">↔️
+                            Orta</button>
+                        <button data-align="right"
+                            class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center text-slate-750 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs">➡️
+                            Sağa</button>
                     </div>
                 </div>
 
                 <!-- Arka Plan Rengi Seçimi -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">PNG Arka Planı (Background)</label>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">PNG Arka Planı
+                        (Background)</label>
                     <div class="grid grid-cols-2 gap-2" id="bgOptionGrid">
-                        <button data-bg="transparent" class="bg-transparent border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 transition active-bg-btn" style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;">Şeffaf</button>
-                        <button data-bg="#ffffff" class="bg-white border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center text-slate-900 shadow-sm transition">Beyaz</button>
+                        <button data-bg="transparent"
+                            class="bg-transparent border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 transition active-bg-btn"
+                            style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;">Şeffaf</button>
+                        <button data-bg="#ffffff"
+                            class="bg-white border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center text-slate-900 shadow-sm transition">Beyaz</button>
                     </div>
                 </div>
 
-                <!-- Görselden Formüle Çevirici (OCR) -->
+                <!-- Gemini AI Görselden LaTeX'e Çevirici -->
                 <div class="border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                        <span>📷</span> Görselden LaTeX'e Çevir (OCR)
+                    <label
+                        class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                        <span>🤖</span> Yapay Zeka ile LaTeX'e Çevir (Gemini AI)
                     </label>
-                    <div id="ocrDropzone" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center min-h-[90px] relative overflow-hidden">
+
+                    <div id="ocrDropzone"
+                        class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center min-h-[90px] relative overflow-hidden">
                         <input type="file" id="ocrFileInput" class="hidden" accept="image/*">
                         <div id="ocrPrompt" class="space-y-1">
-                            <p class="text-xs font-bold text-slate-650 dark:text-slate-300">Resim Seçin veya Yapıştırın</p>
-                            <p class="text-[9px] text-slate-400 dark:text-slate-500">Ctrl + V ile ekran görüntüsü yapıştırabilirsiniz</p>
+                            <p class="text-xs font-bold text-slate-650 dark:text-slate-300">Görseli yapıştırın veya <span id="ocrSelectFileLink" class="text-blue-500 hover:underline cursor-pointer font-bold">dosya seçin</span></p>
+                            <p class="text-[9px] text-slate-400 dark:text-slate-550">Ctrl + V ile ekran görüntüsü yapıştırabilirsiniz</p>
                         </div>
                         <div id="ocrPreviewContainer" class="hidden w-full flex flex-col items-center">
-                            <img id="ocrPreviewImage" class="max-h-24 object-contain rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs mb-2">
-                            <button id="ocrAnalyzeBtn" class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow active:scale-[0.98] transition">Görseli Analiz Et (Çevir)</button>
+                            <img id="ocrPreviewImage"
+                                class="max-h-24 object-contain rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs mb-2">
+                            <button id="ocrAnalyzeBtn"
+                                class="w-full py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-750 hover:to-indigo-700 text-white rounded-lg text-xs font-semibold shadow active:scale-[0.98] transition">Yapay
+                                Zeka ile Analiz Et</button>
                         </div>
                     </div>
                 </div>
@@ -548,8 +261,13 @@
 
             <!-- İndirme Butonu (Makul Boyutta Ortalanmış) -->
             <div class="mt-6 lg:mt-0 pt-4 flex justify-center">
-                <button id="downloadBtn" class="w-full max-w-[200px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-750 text-white py-2.5 rounded-xl hover:shadow-md hover:shadow-blue-500/10 active:scale-[0.98] transition-all font-medium text-xs flex justify-center items-center gap-1.5 shadow">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                <button id="downloadBtn"
+                    class="w-full max-w-[200px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-750 text-white py-2.5 rounded-xl hover:shadow-md hover:shadow-blue-500/10 active:scale-[0.98] transition-all font-medium text-xs flex justify-center items-center gap-1.5 shadow">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
                     PNG Olarak İndir
                 </button>
             </div>
@@ -557,1222 +275,32 @@
     </div>
 
     <!-- Hata Bildirim Modalı -->
-    <div id="errorModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-red-100 dark:border-red-950">
+    <div id="errorModal"
+        class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-red-100 dark:border-red-950">
             <div class="flex items-center gap-4 mb-4">
-                <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                <div
+                    class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
                     <span class="text-2xl">⚠️</span>
                 </div>
                 <h3 class="text-lg font-bold text-slate-900 dark:text-white">Formül Hatası</h3>
             </div>
             <p id="errorModalMessage" class="text-slate-600 dark:text-slate-300 mb-6 text-sm leading-relaxed"></p>
-            <button onclick="document.getElementById('errorModal').classList.add('hidden')" class="w-full bg-slate-900 dark:bg-slate-700 text-white font-bold py-2.5 rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 transition shadow">Tamam</button>
+            <button onclick="document.getElementById('errorModal').classList.add('hidden')"
+                class="w-full bg-slate-900 dark:bg-slate-700 text-white font-bold py-2.5 rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 transition shadow">Tamam</button>
         </div>
     </div>
 
     <!-- Developer Credit Signature -->
-    <a href="https://instagram.com/berrusagir" target="_blank" rel="noopener noreferrer" class="fixed bottom-2 left-3 text-[10px] text-slate-400 dark:text-slate-600 hover:text-brand-500 font-medium z-50 tracking-wider transition-colors cursor-pointer">
+    <a href="https://instagram.com/berrusagir" target="_blank" rel="noopener noreferrer"
+        class="fixed bottom-2 left-3 text-[10px] text-slate-400 dark:text-slate-600 hover:text-brand-500 font-medium z-50 tracking-wider transition-colors cursor-pointer">
         Berru Sağır
     </a>
 
-    <script>
-        // LaTeX Categories & Templates
-        const categories = {
-            "TEMEL ŞABLONLAR": [
-                "\\frac{\\square}{\\square}", "{\\square}^{2}", "{\\square}^{3}", "{\\square}^{\\square}", 
-                "\\sqrt{\\square}", "\\sqrt[\\square]{\\square}", "|\\square|", 
-                "\\left( \\square \\right)", "\\left[ \\square \\right]", "\\left\\{ \\square \\right\\}", 
-                "{\\square}_{\\square}", "\\int \\square dx", "\\sum \\square", "\\prod \\square", 
-                "\\lim_{\\square \\to \\square} \\square", "\\log_{\\square} \\square", 
-                "\\overrightarrow{\\square}", "\\overline{\\square}", "\\vec{\\square}", "\\text{\\square}"
-            ],
-            "ARİTMETİK & CEBİR": ["+", "-", "\\times", ".", "\\div", ":", "=", "\\neq", "<", ">", "\\leq", "\\geq", "\\approx", "\\cong", "\\equiv", "\\propto", "\\pm", "\\infty", "\\%", "!"],
-            "TRİGONOMETRİ & FONKSİYONLAR": ["\\sin", "\\cos", "\\tan", "\\cot", "\\sec", "\\csc", "\\arcsin", "\\arccos", "\\arctan", "\\log", "\\ln", "\\exp"],
-            "ANALİZ & CALCULUS": ["\\int", "\\iint", "\\iiint", "\\oint", "\\sum", "\\prod", "\\lim", "\\sup", "\\inf", "\\frac{d}{dx}", "\\partial", "\\nabla"],
-            "KÜMELER & MANTIK": ["\\in", "\\notin", "\\subset", "\\subseteq", "\\supset", "\\supseteq", "\\cup", "\\cap", "\\setminus", "\\emptyset", "\\forall", "\\exists", "\\neg", "\\wedge", "\\vee", "\\Rightarrow", "\\Leftrightarrow"],
-            "GEOMETRİ & VEKTÖRLER": ["^\\circ", "\\angle", "\\perp", "\\parallel", "\\triangle", "\\rightarrow", "\\vec{v}", "\\overrightarrow{AB}", "\\overline{AB}", "\\sim"],
-            "YUNAN ALFABESİ": [
-                { tex: "\\alpha", desc: "alpha" },
-                { tex: "\\beta", desc: "beta" },
-                { tex: "\\gamma", desc: "gamma" },
-                { tex: "\\delta", desc: "delta" },
-                { tex: "\\pi", desc: "pi" },
-                { tex: "\\sigma", desc: "sigma" },
-                { tex: "\\theta", desc: "theta" },
-                { tex: "\\lambda", desc: "lambda" },
-                { tex: "\\phi", desc: "phi" },
-                { tex: "\\omega", desc: "omega" },
-                { tex: "\\Delta", desc: "delta cap" },
-                { tex: "\\Omega", desc: "omega cap" }
-            ]
-        };
-
-        const standardColors = [
-            "#2563eb", "#3b82f6", "#10b981", "#14b8a6", "#f59e0b",
-            "#ef4444", "#ec4899", "#8b5cf6", "#6366f1", "#0f172a",
-            "#ffffff", "#f3f4f6", "#cbd5e1", "#64748b", "#334155",
-            "#e11d48", "#d97706", "#059669", "#0891b2", "#4f46e5"
-        ];
-
-        let currentColor = "#000000";
-        let currentBgColor = "#ffffff"; // Default background white
-        let currentAlignment = "center"; // Default alignment centered
-        
-        // Element references
-        const mf = document.getElementById('mathPreview');
-        const latexInput = document.getElementById('latexInput');
-        const templateContainer = document.getElementById('templateContainer');
-        const renderMode = document.getElementById('renderMode');
-        const fontFamily = document.getElementById('fontFamily');
-        const fontSamplePreview = document.getElementById('fontSamplePreview');
-        const fontSampleText = document.getElementById('fontSampleText');
-        const fontSelectWrapper = document.getElementById('fontSelectWrapper');
-        const fontSize = document.getElementById('fontSize');
-        const fontSizeLabel = document.getElementById('fontSizeLabel');
-        const colorDisplay = document.getElementById('colorDisplay');
-        const colorHexText = document.getElementById('colorHexText');
-        const colorPopup = document.getElementById('colorPopup');
-        const colorGrid = document.getElementById('colorGrid');
-        const hexInput = document.getElementById('hexInput');
-        const designPreviewContainer = document.getElementById('designPreviewContainer');
-        const bgOptionGrid = document.getElementById('bgOptionGrid');
-
-        // Initial setup for color display
-        colorDisplay.style.backgroundColor = currentColor;
-        colorHexText.innerText = currentColor.toUpperCase();
-
-        // Modal error handler
-        function showError(msg) {
-            document.getElementById('errorModalMessage').innerText = msg;
-            document.getElementById('errorModal').classList.remove('hidden');
-        }
-
-        // Fill templates & render them in sidebar using MathJax
-        Object.keys(categories).forEach(cat => {
-            const div = document.createElement('div');
-            div.innerHTML = `<h3 class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">${cat}</h3>`;
-            const grid = document.createElement('div');
-            grid.className = "grid grid-cols-5 gap-2 pb-3";
-            
-            categories[cat].forEach(item => {
-                const btn = document.createElement('button');
-                
-                let tex = typeof item === 'object' ? item.tex : item;
-                let desc = typeof item === 'object' ? item.desc : null;
-                
-                let extraClass = "";
-                if (tex.includes("\\lim") || tex.includes("\\log") || tex.includes("\\int") || tex.includes("\\overrightarrow") || tex.includes("\\text")) {
-                    extraClass = " col-span-2";
-                }
-                
-                btn.className = "key-button p-2 text-slate-750 dark:text-slate-350 transition flex items-center justify-center min-h-[44px]" + extraClass;
-                
-                // Color placeholders (\square) dynamically in blue for high-contrast combinations
-                let displayTex;
-                if (tex.includes("text")) {
-                    displayTex = tex.replace(/\\square/g, 'metin');
-                } else {
-                    displayTex = tex.replace(/\\square/g, '\\color{#2563eb}{\\blacksquare}');
-                }
-                
-                if (desc) {
-                    btn.innerHTML = `
-                        <div class="flex flex-col items-center justify-center w-full">
-                            <span class="text-xs font-semibold mb-0.5">\\(${displayTex}\\)</span>
-                            <span class="text-[8px] opacity-45 dark:opacity-60 uppercase font-mono tracking-wider">${desc}</span>
-                        </div>
-                    `;
-                } else {
-                    btn.innerHTML = `\\(${displayTex}\\)`;
-                }
-                
-                btn.onclick = () => { 
-                    const interactiveTex = tex.replace(/\\square/g, '\\placeholder{}');
-                    mf.executeCommand(['insert', interactiveTex]);
-                    mf.focus();
-                };
-                grid.appendChild(btn);
-            });
-            div.appendChild(grid);
-            templateContainer.appendChild(div);
-        });
-
-        // Initialize template MathJax styling
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                if (window.MathJax) {
-                    MathJax.typesetPromise([templateContainer]);
-                }
-                // Render formula preview on load
-                updatePreview();
-            }, 500);
-        });
-
-        // Theme management
-        const themeToggle = document.getElementById('themeToggle');
-        themeToggle.onclick = () => {
-            document.documentElement.classList.toggle('dark');
-        };
-
-        // Color Picker implementation
-        standardColors.forEach(color => {
-            const btn = document.createElement('div');
-            btn.className = "w-7 h-7 rounded-md border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-110 transition shadow-xs";
-            btn.style.backgroundColor = color;
-            btn.onclick = (e) => { 
-                e.stopPropagation(); 
-                applyColor(color); 
-            };
-            colorGrid.appendChild(btn);
-        });
-
-        function applyColor(hex) {
-            currentColor = hex;
-            colorDisplay.style.backgroundColor = hex;
-            colorHexText.innerText = hex.toUpperCase();
-            hexInput.value = hex.toUpperCase();
-            colorPopup.classList.add('hidden');
-            updatePreview();
-        }
-
-        colorDisplay.onclick = (e) => {
-            e.stopPropagation();
-            colorPopup.classList.toggle('hidden');
-        };
-
-        document.addEventListener('click', (e) => {
-            if (!colorPopup.contains(e.target) && e.target !== colorDisplay) {
-                colorPopup.classList.add('hidden');
-            }
-        });
-
-        hexInput.onchange = (e) => {
-            let val = e.target.value.trim();
-            if(!val.startsWith('#')) val = '#' + val;
-            if(/^#[0-9A-F]{6}$/i.test(val)) applyColor(val);
-        };
-
-        // Background PNG Selection
-        bgOptionGrid.querySelectorAll('button').forEach(btn => {
-            btn.onclick = () => {
-                bgOptionGrid.querySelectorAll('button').forEach(b => {
-                    b.classList.remove('border-2', 'border-blue-500', 'shadow-sm');
-                    b.classList.add('border', 'border-slate-200', 'dark:border-slate-700');
-                });
-                btn.classList.add('border-2', 'border-blue-500', 'shadow-sm');
-                btn.classList.remove('border', 'border-slate-200', 'dark:border-slate-700');
-                
-                currentBgColor = btn.getAttribute('data-bg');
-                
-                // Style the design preview container dynamically
-                if (currentBgColor === 'transparent') {
-                    designPreviewContainer.style.backgroundColor = '';
-                    designPreviewContainer.style.backgroundImage = 'linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%)';
-                    designPreviewContainer.style.backgroundSize = '20px 20px';
-                    designPreviewContainer.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
-                    
-                    // Style the sidebar preview to match the chess transparent grid
-                    fontSamplePreview.style.backgroundColor = '';
-                    fontSamplePreview.style.backgroundImage = 'linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%)';
-                    fontSamplePreview.style.backgroundSize = '12px 12px';
-                    fontSamplePreview.style.backgroundPosition = '0 0, 0 6px, 6px -6px, -6px 0px';
-                } else {
-                    designPreviewContainer.style.backgroundImage = 'none';
-                    designPreviewContainer.style.backgroundColor = currentBgColor;
-                    
-                    // Style the sidebar preview to match the selected color background
-                    fontSamplePreview.style.backgroundImage = 'none';
-                    fontSamplePreview.style.backgroundColor = currentBgColor;
-                }
-                updatePreview();
-            };
-        });
-
-        // Alignment Option Selection
-        const alignOptionGrid = document.getElementById('alignOptionGrid');
-        alignOptionGrid.querySelectorAll('button').forEach(btn => {
-            btn.onclick = () => {
-                alignOptionGrid.querySelectorAll('button').forEach(b => {
-                    b.classList.remove('border-2', 'border-blue-500', 'shadow-sm', 'text-slate-900', 'dark:text-white');
-                    b.classList.add('border', 'border-slate-200', 'dark:border-slate-700', 'text-slate-750', 'dark:text-slate-200');
-                });
-                btn.classList.add('border-2', 'border-blue-500', 'shadow-sm', 'text-slate-900', 'dark:text-white');
-                btn.classList.remove('border', 'border-slate-200', 'dark:border-slate-700', 'text-slate-750', 'dark:text-slate-200');
-                
-                currentAlignment = btn.getAttribute('data-align');
-                updatePreview();
-            };
-        });
-
-        // Initialize design container preview back to white (both main and sidebar previews)
-        designPreviewContainer.style.backgroundColor = '#ffffff';
-        fontSamplePreview.style.backgroundColor = '#ffffff';
-
-        // Toggling render engine
-        renderMode.onchange = () => {
-            if (renderMode.value === 'mathjax') {
-                fontSelectWrapper.style.opacity = '0.5';
-                fontFamily.disabled = true;
-            } else {
-                fontSelectWrapper.style.opacity = '1';
-                fontFamily.disabled = false;
-            }
-            updatePreview();
-        };
-
-        fontFamily.onchange = () => updatePreview();
-        fontSize.oninput = (e) => {
-            fontSizeLabel.innerText = `(${e.target.value}px)`;
-            updatePreview();
-        };
-
-        // ====== RECURSIVE LaTeX TO CSS FLEXBOX PARSER & COMPILER ======
-        
-        // 1. Tokenizer
-        function tokenize(str) {
-            let i = 0;
-            const tokens = [];
-            while (i < str.length) {
-                const c = str[i];
-                if (c === '{') {
-                    tokens.push({ type: 'OPEN', val: '{' });
-                    i++;
-                } else if (c === '}') {
-                    tokens.push({ type: 'CLOSE', val: '}' });
-                    i++;
-                } else if (c === '_') {
-                    tokens.push({ type: 'SUB', val: '_' });
-                    i++;
-                } else if (c === '^') {
-                    tokens.push({ type: 'SUP', val: '^' });
-                    i++;
-                } else if (c === '\\') {
-                    let j = i + 1;
-                    if (j < str.length && (str[j] === '(' || str[j] === ')' || str[j] === '[' || str[j] === ']' || str[j] === '{' || str[j] === '}' || str[j] === ',' || str[j] === ';' || str[j] === '!' || str[j] === '\\' || str[j] === '|' || str[j] === ' ')) {
-                        tokens.push({ type: 'COMMAND', val: '\\' + str[j] });
-                        i = j + 1;
-                    } else {
-                        while (j < str.length && /[a-zA-Z]/.test(str[j])) {
-                            j++;
-                        }
-                        tokens.push({ type: 'COMMAND', val: str.substring(i, j) });
-                        i = j;
-                    }
-                } else if (/\s/.test(c)) {
-                    tokens.push({ type: 'SPACE', val: ' ' });
-                    i++;
-                } else {
-                    tokens.push({ type: 'CHAR', val: c });
-                    i++;
-                }
-            }
-            return tokens;
-        }
-
-        // 2. Parser (Recursive descent)
-        function parse(tokens) {
-            let index = 0;
-
-            function peek() {
-                return tokens[index];
-            }
-
-            function next() {
-                return tokens[index++];
-            }
-
-            function parseExpression() {
-                const nodes = [];
-                while (index < tokens.length) {
-                    const tok = peek();
-                    if (!tok) break;
-                    if (tok.type === 'CLOSE') {
-                        break;
-                    }
-                    nodes.push(parseNode());
-                }
-                return nodes;
-            }
-
-            function parseGroup() {
-                next(); // consume OPEN {
-                const content = parseExpression();
-                if (peek() && peek().type === 'CLOSE') {
-                    next(); // consume CLOSE }
-                }
-                return content;
-            }
-
-            function parseArgument() {
-                const tok = peek();
-                if (!tok) return [];
-                if (tok.type === 'OPEN') {
-                    return parseGroup();
-                }
-                return [parseNode()];
-            }
-
-            function parseNode() {
-                const tok = next();
-                if (!tok) return { type: 'text', val: '' };
-                
-                if (tok.type === 'OPEN') {
-                    const content = parseExpression();
-                    if (peek() && peek().type === 'CLOSE') {
-                        next();
-                    }
-                    return checkSubSup({ type: 'group', content });
-                }
-
-                if (tok.type === 'COMMAND') {
-                    if (tok.val === '\\frac') {
-                        const num = parseArgument();
-                        const den = parseArgument();
-                        return checkSubSup({ type: 'frac', num, den });
-                    } else if (tok.val === '\\sqrt') {
-                        let rootIndex = null;
-                        if (peek() && peek().type === 'CHAR' && peek().val === '[') {
-                            next(); // consume '['
-                            rootIndex = [];
-                            while (index < tokens.length && !(peek().type === 'CHAR' && peek().val === ']')) {
-                                rootIndex.push(parseNode());
-                            }
-                            if (peek() && peek().val === ']') {
-                                next(); // consume ']'
-                            }
-                        }
-                        const content = parseArgument();
-                        return checkSubSup({ type: 'root', index: rootIndex, content });
-                    } else if (tok.val === '\\left') {
-                        const leftBracket = next();
-                        const content = [];
-                        while (index < tokens.length) {
-                            const t = peek();
-                            if (t && t.type === 'COMMAND' && t.val === '\\right') {
-                                next(); // consume \right
-                                break;
-                            }
-                            content.push(parseNode());
-                        }
-                        const rightBracket = next();
-                        return checkSubSup({ type: 'bracket', left: leftBracket, right: rightBracket, content });
-                    } else if (tok.val === '\\begin') {
-                        const envTok = parseArgument();
-                        const envName = envTok.map(n => n.val || '').join('');
-                        
-                        const contentTokens = [];
-                        let depth = 1;
-                        while (index < tokens.length) {
-                            const t = peek();
-                            if (t && t.type === 'COMMAND' && t.val === '\\begin') {
-                                contentTokens.push(next());
-                                depth++;
-                            } else if (t && t.type === 'COMMAND' && t.val === '\\end') {
-                                const lookaheadIndex = index;
-                                index++; // consume \end
-                                const endEnv = parseArgument();
-                                const endEnvName = endEnv.map(n => n.val || '').join('');
-                                if (endEnvName === envName) {
-                                    depth--;
-                                    if (depth === 0) {
-                                        break;
-                                    }
-                                }
-                                contentTokens.push(t);
-                                contentTokens.push(...tokens.slice(lookaheadIndex + 1, index));
-                            } else {
-                                contentTokens.push(next());
-                            }
-                        }
-                        
-                        // Split content by rows (\\\\) and columns (&)
-                        const rows = [];
-                        let currentRow = [];
-                        let currentCellTokens = [];
-                        
-                        for (let t of contentTokens) {
-                            if (t.type === 'COMMAND' && t.val === '\\\\') {
-                                currentRow.push(parse(currentCellTokens));
-                                rows.push(currentRow);
-                                currentRow = [];
-                                currentCellTokens = [];
-                            } else if (t.type === 'CHAR' && t.val === '&') {
-                                currentRow.push(parse(currentCellTokens));
-                                currentCellTokens = [];
-                            } else {
-                                currentCellTokens.push(t);
-                            }
-                        }
-                        if (currentCellTokens.length > 0 || currentRow.length > 0) {
-                            currentRow.push(parse(currentCellTokens));
-                            rows.push(currentRow);
-                        }
-                        
-                        return checkSubSup({ type: 'matrix', env: envName, rows });
-                    } else if (tok.val === '\\vec') {
-                        const content = parseArgument();
-                        return checkSubSup({ type: 'decorator', dec: 'vec', content });
-                    } else if (tok.val === '\\overline') {
-                        const content = parseArgument();
-                        return checkSubSup({ type: 'decorator', dec: 'overline', content });
-                    } else if (tok.val === '\\overrightarrow') {
-                        const content = parseArgument();
-                        return checkSubSup({ type: 'decorator', dec: 'vector-arrow', content });
-                    } else if (tok.val === '\\hat') {
-                        const content = parseArgument();
-                        return checkSubSup({ type: 'decorator', dec: 'hat', content });
-                    } else if (tok.val === '\\text') {
-                        const content = parseArgument();
-                        return checkSubSup({ type: 'text-group', content });
-                    } else {
-                        return checkSubSup({ type: 'command', val: tok.val });
-                    }
-                }
-
-                if (tok.type === 'SUB' || tok.type === 'SUP') {
-                    const arg = parseArgument();
-                    return { type: tok.type === 'SUB' ? 'sub' : 'sup', base: [{ type: 'text', val: '' }], val: arg };
-                }
-
-                return checkSubSup({ type: 'text', val: tok.val });
-            }
-
-            function checkSubSup(node) {
-                let sub = null;
-                let sup = null;
-                
-                while (index < tokens.length) {
-                    const nextTok = peek();
-                    if (nextTok && nextTok.type === 'SUB') {
-                        next();
-                        sub = parseArgument();
-                    } else if (nextTok && nextTok.type === 'SUP') {
-                        next();
-                        sup = parseArgument();
-                    } else {
-                        break;
-                    }
-                }
-                
-                if (sub && sup) {
-                    return { type: 'subsup', base: [node], sub, sup };
-                } else if (sub) {
-                    return { type: 'sub', base: [node], sub };
-                } else if (sup) {
-                    return { type: 'sup', base: [node], sup };
-                }
-                return node;
-            }
-
-            return parseExpression();
-        }
-
-        // 3. Render Nodes to HTML
-        const COMMAND_MAPPING = {
-            '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\pi': 'π', '\\sigma': 'σ', 
-            '\\theta': 'θ', '\\lambda': 'λ', '\\phi': 'φ', '\\omega': 'ω', '\\Delta': 'Δ', '\\Omega': 'Ω',
-            '\\epsilon': 'ε', '\\eta': 'η', '\\iota': 'ι', '\\kappa': 'κ', '\\mu': 'μ', '\\nu': 'ν', 
-            '\\xi': 'ξ', '\\rho': 'ρ', '\\tau': 'τ', '\\upsilon': 'υ', '\\chi': 'χ', '\\psi': 'ψ',
-            '\\Gamma': 'Γ', '\\Theta': 'Θ', '\\Lambda': 'Λ', '\\Xi': 'Ξ', '\\Pi': 'Π', '\\Sigma': 'Σ', 
-            '\\Upsilon': 'Υ', '\\Phi': 'Φ', '\\Psi': 'Ψ',
-            
-            '\\times': '×', '\\div': '÷', '\\pm': '±', '\\infty': '∞', '\\approx': '≈', '\\neq': '≠',
-            '\\leq': '≤', '\\geq': '≥', '\\cong': '≅', '\\equiv': '≡', '\\propto': '∝',
-            '\\cdot': '·', '\\cdotp': '·', '\\ldots': '…', '\\cdots': '⋯', '\\ddots': '⋱', '\\vdots': '⋮',
-            
-            '\\in': '∈', '\\notin': '∉', '\\subset': '⊂', '\\subseteq': '⊆', '\\supset': '⊃', '\\supseteq': '⊇',
-            '\\cup': '∪', '\\cap': '∩', '\\setminus': '∖', '\\emptyset': '∅',
-            '\\forall': '∀', '\\exists': '∃', '\\neg': '¬', '\\wedge': '∧', '\\vee': '∨',
-            '\\Rightarrow': '⇒', '\\Leftrightarrow': '⇔', '\\to': '→', '\\gets': '←', '\\rightarrow': '→', '\\leftarrow': '←',
-            
-            '\\partial': '∂', '\\nabla': '∇', '\\angle': '∠', '\\perp': '⊥', '\\parallel': '∥', 
-            '\\triangle': '△', '\\sim': '∼',
-            
-            '\\quad': '<span style="margin-right: 0.8em; display: inline-block;"></span>',
-            '\\qquad': '<span style="margin-right: 1.6em; display: inline-block;"></span>',
-            '\\,': '<span style="margin-right: 0.15em; display: inline-block;"></span>',
-            '\\:': '<span style="margin-right: 0.22em; display: inline-block;"></span>',
-            '\\;': '<span style="margin-right: 0.27em; display: inline-block;"></span>',
-            '\\ ': '<span style="margin-right: 0.25em; display: inline-block;"></span>',
-            '\\\\': '<br/>',
-            
-            '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan', '\\cot': 'cot', '\\sec': 'sec', '\\csc': 'csc',
-            '\\arcsin': 'arcsin', '\\arccos': 'arccos', '\\arctan': 'arctan', '\\log': 'log', '\\ln': 'ln', '\\exp': 'exp',
-        };
-
-        function isLimitOperator(baseNodes) {
-            if (baseNodes.length === 1 && baseNodes[0].type === 'command') {
-                const val = baseNodes[0].val;
-                return val === '\\sum' || val === '\\prod' || val === '\\lim';
-            }
-            return false;
-        }
-
-        function renderNodesToHtml(nodes, isNormalText = false) {
-            return nodes.map(node => {
-                switch (node.type) {
-                    case 'text':
-                        let val = node.val;
-                        if (val === ' ') return '&nbsp;';
-                        if (!isNormalText && /^[a-zA-Z]$/.test(val)) {
-                            return `<span class="math-var">${val}</span>`;
-                        }
-                        return `<span>${val}</span>`;
-
-                    case 'command':
-                        if (node.val === '\\placeholder') {
-                            return `<span class="math-placeholder-box"></span>`;
-                        }
-                        const cmdVal = COMMAND_MAPPING[node.val] || node.val.replace(/^\\/, '');
-                        if (node.val === '\\int') {
-                            return `<span class="math-operator-large math-integral">∫</span>`;
-                        }
-                        if (node.val === '\\sum') {
-                            return `<span class="math-operator-large math-sum">∑</span>`;
-                        }
-                        if (node.val === '\\prod') {
-                            return `<span class="math-operator-large math-prod">∏</span>`;
-                        }
-                        if (node.val === '\\lim') {
-                            return `<span class="math-operator-large math-lim">lim</span>`;
-                        }
-                        
-                        if (COMMAND_MAPPING[node.val]) {
-                            if (node.val.startsWith('\\quad') || node.val.startsWith('\\\\') || node.val.startsWith('\\ ')) {
-                                return cmdVal; // raw HTML spacer output
-                            }
-                            if (!/^[a-zA-Z]{3,}/.test(COMMAND_MAPPING[node.val])) {
-                                return `<span class="math-symbol">${cmdVal}</span>`;
-                            }
-                        }
-                        return `<span class="math-text-cmd">${cmdVal}</span>`;
-
-                    case 'group':
-                        return `<span class="math-group">${renderNodesToHtml(node.content, isNormalText)}</span>`;
-
-                    case 'text-group':
-                        return `<span class="math-text-normal">${renderNodesToHtml(node.content, true)}</span>`;
-
-                    case 'frac':
-                        return `<div class="math-frac">
-                            <div class="math-num">${renderNodesToHtml(node.num, isNormalText)}</div>
-                            <div class="math-den">${renderNodesToHtml(node.den, isNormalText)}</div>
-                        </div>`;
-
-                    case 'sub':
-                        if (isLimitOperator(node.base)) {
-                            return `<div class="math-limits-op-wrap">
-                                <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                                <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText)}</sub>
-                            </div>`;
-                        }
-                        return `<span class="math-sub-wrap">
-                            <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                            <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText)}</sub>
-                        </span>`;
-
-                    case 'sup':
-                        if (isLimitOperator(node.base)) {
-                            return `<div class="math-limits-op-wrap">
-                                <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText)}</sup>
-                                <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                            </div>`;
-                        }
-                        return `<span class="math-sup-wrap">
-                            <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                            <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText)}</sup>
-                        </span>`;
-
-                    case 'subsup':
-                        if (isLimitOperator(node.base)) {
-                            return `<div class="math-limits-op-wrap">
-                                <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText)}</sup>
-                                <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                                <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText)}</sub>
-                            </div>`;
-                        }
-                        return `<span class="math-subsup-wrap">
-                            <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                            <span class="math-scripts">
-                                <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText)}</sup>
-                                <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText)}</sub>
-                            </span>
-                        </span>`;
-
-                    case 'root':
-                        const rootContentHtml = renderNodesToHtml(node.content, isNormalText);
-                        if (node.index && node.index.length > 0) {
-                            const indexHtml = renderNodesToHtml(node.index, isNormalText);
-                            return `<div class="math-root">
-                                <span class="math-root-index">${indexHtml}</span>
-                                <div class="math-root-symbol-wrap">
-                                    <svg class="math-root-svg" viewBox="0 0 10 20" preserveAspectRatio="none">
-                                        <path d="M 1,12 L 3,12 L 6,18 L 10,0" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
-                                    </svg>
-                                </div>
-                                <div class="math-root-content">${rootContentHtml}</div>
-                            </div>`;
-                        }
-                        return `<div class="math-root">
-                            <div class="math-root-symbol-wrap">
-                                <svg class="math-root-svg" viewBox="0 0 10 20" preserveAspectRatio="none">
-                                    <path d="M 1,12 L 3,12 L 6,18 L 10,0" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
-                                </svg>
-                            </div>
-                            <div class="math-root-content">${rootContentHtml}</div>
-                        </div>`;
-
-                    case 'bracket':
-                        const leftBracketSym = node.left ? (node.left.val || node.left) : '(';
-                        const rightBracketSym = node.right ? (node.right.val || node.right) : ')';
-                        
-                        let leftSvg = '';
-                        let rightSvg = '';
-
-                        if (leftBracketSym === '(') {
-                            leftSvg = `<path d="M 8,2 A 8,8 0 0,0 2,10 A 8,8 0 0,0 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        } else if (leftBracketSym === '[') {
-                            leftSvg = `<path d="M 8,2 L 3,2 L 3,18 L 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        } else if (leftBracketSym === '\\{' || leftBracketSym === '{') {
-                            leftSvg = `<path d="M 8,2 C 6,2 5,4 5,6 L 5,8 C 5,9.5 4,10 2,10 C 4,10 5,10.5 5,12 L 5,14 C 5,16 6,18 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        } else if (leftBracketSym === '|') {
-                            leftSvg = `<path d="M 5,2 L 5,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        } else {
-                            leftSvg = `<path d="M 8,2 A 8,8 0 0,0 2,10 A 8,8 0 0,0 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        }
-
-                        if (rightBracketSym === ')') {
-                            rightSvg = `<path d="M 2,2 A 8,8 0 0,1 8,10 A 8,8 0 0,1 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        } else if (rightBracketSym === ']') {
-                            rightSvg = `<path d="M 2,2 L 7,2 L 7,18 L 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        } else if (rightBracketSym === '\\}' || rightBracketSym === '}') {
-                            rightSvg = `<path d="M 2,2 C 4,2 5,4 5,6 L 5,8 C 5,9.5 6,10 8,10 C 6,10 5,10.5 5,12 L 5,14 C 5,16 4,18 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        } else if (rightBracketSym === '|') {
-                            rightSvg = `<path d="M 5,2 L 5,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        } else {
-                            rightSvg = `<path d="M 2,2 A 8,8 0 0,1 8,10 A 8,8 0 0,1 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
-                        }
-
-                        return `<div class="math-bracket-wrap">
-                            <div class="math-bracket-symbol math-bracket-left">
-                                <svg viewBox="0 0 10 20" preserveAspectRatio="none" style="height: 100%; width: 100%;">${leftSvg}</svg>
-                            </div>
-                            <div class="math-bracket-content">${renderNodesToHtml(node.content, isNormalText)}</div>
-                            <div class="math-bracket-symbol math-bracket-right">
-                                <svg viewBox="0 0 10 20" preserveAspectRatio="none" style="height: 100%; width: 100%;">${rightSvg}</svg>
-                            </div>
-                        </div>`;
-                    
-                    case 'matrix':
-                        let leftParen = '';
-                        let rightParen = '';
-                        if (node.env === 'pmatrix') {
-                            leftParen = '(';
-                            rightParen = ')';
-                        } else if (node.env === 'bmatrix') {
-                            leftParen = '[';
-                            rightParen = ']';
-                        } else if (node.env === 'vmatrix') {
-                            leftParen = '|';
-                            rightParen = '|';
-                        }
-                        
-                        const gridHtml = node.rows.map(row => {
-                            return `<div class="math-matrix-row">
-                                ${row.map(cell => `<div class="math-matrix-cell">${renderNodesToHtml(cell, isNormalText)}</div>`).join('')}
-                            </div>`;
-                        }).join('');
-                        
-                        // Apply custom alignment styles if the environment is a gather environment (our multi-line engine)
-                        let alignStyle = '';
-                        if (node.env === 'gather') {
-                            const alignFlex = currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center');
-                            alignStyle = ` style="align-items: ${alignFlex} !important;"`;
-                        }
-                        
-                        const matrixContent = `<div class="math-matrix"${alignStyle}>${gridHtml}</div>`;
-                        
-                        if (leftParen || rightParen) {
-                            return renderNodesToHtml([{
-                                type: 'bracket',
-                                left: leftParen,
-                                right: rightParen,
-                                content: [{ type: 'custom-html', html: matrixContent }]
-                            }], isNormalText);
-                        }
-                        
-                        return matrixContent;
-
-                    case 'decorator':
-                        const innerHtml = renderNodesToHtml(node.content, isNormalText);
-                        if (node.dec === 'vec' || node.dec === 'vector-arrow') {
-                            return `<span class="math-decorator-vec"><span class="math-dec-arrow">→</span><span class="math-dec-content">${innerHtml}</span></span>`;
-                        }
-                        if (node.dec === 'overline') {
-                            return `<span class="math-decorator-overline">${innerHtml}</span>`;
-                        }
-                        if (node.dec === 'hat') {
-                            return `<span class="math-decorator-hat"><span class="math-dec-hat">^</span><span class="math-dec-content">${innerHtml}</span></span>`;
-                        }
-                        return innerHtml;
-
-                    case 'custom-html':
-                        return node.html;
-                        
-                    default:
-                        return '';
-                }
-            }).join('');
-        }
-
-        function compileLatexToHtml(latex, fontFace, size, color) {
-            try {
-                const tokens = tokenize(latex);
-                const ast = parse(tokens);
-                const mathHtml = renderNodesToHtml(ast);
-                return `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color};">
-                    ${mathHtml}
-                </div>`;
-            } catch (err) {
-                console.error("Custom parser error:", err);
-                return `<div class="text-red-500 text-xs italic">Formül parse edilemedi: ${err.message}</div>`;
-            }
-        }
-
-        // Injected CSS inside MathLive Shadow DOM to apply custom font overrides
-        function applyFontToMathField(fontFamilyName) {
-            if (!mf || !mf.shadowRoot) {
-                // If shadow DOM isn't ready yet, retry in 50ms
-                setTimeout(() => applyFontToMathField(fontFamilyName), 50);
-                return;
-            }
-            
-            let styleEl = mf.shadowRoot.getElementById('custom-font-style');
-            if (!styleEl) {
-                styleEl = document.createElement('style');
-                styleEl.id = 'custom-font-style';
-                mf.shadowRoot.appendChild(styleEl);
-            }
-            
-            if (renderMode.value === 'mathjax') {
-                styleEl.textContent = '';
-                return;
-            }
-            
-            styleEl.textContent = `
-                /* Override standard math fonts for variables, text, and digits */
-                .ML__fieldcontainer, 
-                .ML__fieldcontainer *,
-                .ML__mathlive,
-                .ML__mathlive *,
-                .mord,
-                .mi,
-                .mn,
-                .mo,
-                .mathnormal,
-                .text {
-                    font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
-                }
-                
-                /* Keep math operator glyphs standard layout and sizes */
-                .mbin, .mrel, .mop {
-                    font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
-                }
-                
-                /* Set caret (cursor) color to match chosen theme color */
-                .ML__caret {
-                    background-color: ${currentColor} !important;
-                }
-            `;
-        }
-
-        // Utility to wrap latex in gather block for multiline support
-        function setMathfieldValue(latex) {
-            let clean = latex.trim();
-            if (!clean.startsWith('\\begin{gather}')) {
-                clean = '\\begin{gather} ' + clean + ' \\end{gather}';
-            }
-            mf.setValue(clean.replace(/\\square/g, '\\placeholder{}'));
-        }
-
-        // ====== LIVE PREVIEW & WORKSPACE CONTROLLER ======
-        function updatePreview() {
-            let latexRaw = mf.getValue('latex');
-            
-            // Strip outer gather block if present for the user input box
-            let cleanLatex = latexRaw;
-            if (cleanLatex.startsWith('\\begin{gather}')) {
-                cleanLatex = cleanLatex.substring('\\begin{gather}'.length).trim();
-            }
-            if (cleanLatex.endsWith('\\end{gather}')) {
-                cleanLatex = cleanLatex.substring(0, cleanLatex.length - '\\end{gather}'.length).trim();
-            }
-            
-            latexInput.value = cleanLatex.replace(/\\placeholder\{.*?\}/g, '\\square');
-            
-            const mode = renderMode.value;
-            const selectedFont = fontFamily.value;
-            const sizeVal = fontSize.value;
-
-            // Apply selected styles directly to the interactive workspace math-field
-            mf.style.color = currentColor;
-            mf.style.fontSize = sizeVal + "px";
-            
-            // Update the sidebar font preview with the compiled math HTML
-            if (fontSampleText) {
-                const previewFont = (mode === 'custom') ? selectedFont : 'Times New Roman';
-                fontSampleText.innerHTML = compileLatexToHtml(latexRaw, previewFont, 15, currentColor);
-            }
-
-            if (mode === 'custom') {
-                mf.style.fontFamily = `'${selectedFont}', sans-serif`;
-                applyFontToMathField(selectedFont);
-            } else {
-                mf.style.fontFamily = 'initial';
-                applyFontToMathField(''); // clear shadow overrides
-            }
-        }
-
-        // Double-ended synchronization (MathLive <-> Textarea)
-        mf.addEventListener('input', () => {
-            updatePreview();
-        });
-
-        latexInput.addEventListener('input', () => {
-            let latex = latexInput.value;
-            setMathfieldValue(latex);
-            updatePreview();
-        });
-
-        // ====== HIGH QUALITY PNG EXPORT ======
-        document.getElementById('downloadBtn').onclick = () => {
-            const btn = document.getElementById('downloadBtn');
-            const originalText = btn.innerHTML;
-            
-            // Syntax/grouping error checks before downloading
-            let latexCodeRaw = mf.getValue('latex');
-            const leftCount = (latexCodeRaw.match(/\\left/g) || []).length;
-            const rightCount = (latexCodeRaw.match(/\\right/g) || []).length;
-            
-            if (leftCount !== rightCount) {
-                showError("Eksik veya kapatılmamış parantez (\\left ve \\right sayıları eşleşmiyor). Lütfen formülü kontrol edin.");
-                return;
-            }
-            
-            let strippedLatex = latexCodeRaw.replace(/\\{/g, "").replace(/\\}/g, "");
-            const openBraceCount = (strippedLatex.match(/\{/g) || []).length;
-            const closeBraceCount = (strippedLatex.match(/\}/g) || []).length;
-            
-            if (openBraceCount !== closeBraceCount) {
-                showError("Kapatılmamış gruplama parantezi ({ ve } sembolleri eşleşmiyor). Lütfen formülü kontrol edin.");
-                return;
-            }
-
-            btn.innerHTML = `<span class="animate-pulse">PNG Hazırlanıyor...</span>`;
-            
-            const fontSizeVal = fontSize.value;
-            const fontFam = fontFamily.value;
-            const mode = renderMode.value;
-            
-            // Create target export container
-            const exportWrapper = document.createElement('div');
-            exportWrapper.style.position = 'absolute';
-            exportWrapper.style.left = '0px';
-            exportWrapper.style.top = '0px';
-            exportWrapper.style.zIndex = '-9999';
-            exportWrapper.style.display = 'inline-block';
-            exportWrapper.style.padding = '40px';
-            
-            // Apply chosen PNG background
-            if (currentBgColor === 'transparent') {
-                exportWrapper.style.backgroundColor = 'transparent';
-            } else {
-                exportWrapper.style.backgroundColor = currentBgColor;
-            }
-
-            if (mode === 'custom') {
-                exportWrapper.innerHTML = compileLatexToHtml(latexCodeRaw, fontFam, fontSizeVal, currentColor);
-                document.body.appendChild(exportWrapper);
-                
-                // Small delay to ensure browser paints custom web fonts inside the DOM
-                setTimeout(() => {
-                    htmlToImage.toPng(exportWrapper, { 
-                        backgroundColor: currentBgColor === 'transparent' ? null : currentBgColor, 
-                        pixelRatio: 4, // 4x high resolution
-                        style: {
-                            position: 'relative',
-                            left: 'auto',
-                            top: 'auto',
-                            zIndex: '1'
-                        }
-                    })
-                    .then(dataUrl => {
-                        const link = document.createElement('a');
-                        link.download = 'matematik-formulu.png';
-                        link.href = dataUrl;
-                        link.click();
-                        
-                        document.body.removeChild(exportWrapper);
-                        btn.innerHTML = originalText;
-                    })
-                    .catch(error => {
-                        console.error('PNG export failed:', error);
-                        document.body.removeChild(exportWrapper);
-                        btn.innerHTML = originalText;
-                        showError("Görsel oluşturulurken bir hata oluştu.");
-                    });
-                }, 350);
-            } else {
-                // MathJax Classic mode export
-                let latexCode = latexCodeRaw.replace(/\\placeholder\{.*?\}/g, '\\square');
-                
-                const mathjaxTarget = document.createElement('div');
-                mathjaxTarget.id = 'mjx-export-target';
-                mathjaxTarget.style.color = currentColor;
-                mathjaxTarget.style.fontSize = fontSizeVal + 'px';
-                mathjaxTarget.style.display = 'inline-block';
-                mathjaxTarget.innerHTML = `$$${latexCode}$$`;
-                
-                exportWrapper.appendChild(mathjaxTarget);
-                document.body.appendChild(exportWrapper);
-
-                MathJax.typesetPromise([mathjaxTarget]).then(() => {
-                    // Check MathJax render errors
-                    if (mathjaxTarget.querySelector('[data-mjx-error]')) {
-                        showError("Formül dizilişinde (syntax) anlaşılamayan bir hata var.");
-                        document.body.removeChild(exportWrapper);
-                        btn.innerHTML = originalText;
-                        return;
-                    }
-                    
-                    setTimeout(() => {
-                        htmlToImage.toPng(exportWrapper, { 
-                            backgroundColor: currentBgColor === 'transparent' ? null : currentBgColor, 
-                            pixelRatio: 4,
-                            style: {
-                                position: 'relative',
-                                left: 'auto',
-                                top: 'auto',
-                                zIndex: '1'
-                            }
-                        })
-                        .then(dataUrl => {
-                            const link = document.createElement('a');
-                            link.download = 'matematik-formulu.png';
-                            link.href = dataUrl;
-                            link.click();
-                            
-                            document.body.removeChild(exportWrapper);
-                            btn.innerHTML = originalText;
-                        })
-                        .catch(error => {
-                            console.error('PNG MathJax export failed:', error);
-                            document.body.removeChild(exportWrapper);
-                            btn.innerHTML = originalText;
-                            showError("Grafik render hatası.");
-                        });
-                    }, 350);
-                }).catch(error => {
-                    console.error('MathJax render error:', error);
-                    document.body.removeChild(exportWrapper);
-                    btn.innerHTML = originalText;
-                    showError("MathJax formülü oluşturamadı.");
-                });
-            }
-        };
-
-        // Newline and Space utility buttons listeners
-        document.getElementById('addNewlineBtn').onclick = () => {
-            if (mf) {
-                mf.focus();
-                mf.executeCommand(['insert', '\\\\ ']); // Inserts double backslash newline
-            }
-        };
-
-        document.getElementById('addSpaceBtn').onclick = () => {
-            if (mf) {
-                mf.focus();
-                mf.executeCommand(['insert', '\\ ']); // Inserts LaTeX space
-            }
-        };
-
-        // ====== OPTICAL CHARACTER RECOGNITION (OCR) ENGINE ======
-        const ocrDropzone = document.getElementById('ocrDropzone');
-        const ocrFileInput = document.getElementById('ocrFileInput');
-        const ocrPrompt = document.getElementById('ocrPrompt');
-        const ocrPreviewContainer = document.getElementById('ocrPreviewContainer');
-        const ocrPreviewImage = document.getElementById('ocrPreviewImage');
-        const ocrAnalyzeBtn = document.getElementById('ocrAnalyzeBtn');
-        let selectedOcrFile = null;
-
-        ocrDropzone.onclick = (e) => {
-            if (e.target !== ocrAnalyzeBtn) {
-                ocrFileInput.click();
-            }
-        };
-
-        ocrFileInput.onchange = (e) => {
-            if (e.target.files.length > 0) {
-                handleOcrImage(e.target.files[0]);
-            }
-        };
-
-        ocrDropzone.ondragover = (e) => {
-            e.preventDefault();
-            ocrDropzone.classList.add('border-blue-500', 'bg-blue-50/20');
-        };
-        ocrDropzone.ondragleave = () => {
-            ocrDropzone.classList.remove('border-blue-500', 'bg-blue-50/20');
-        };
-        ocrDropzone.ondrop = (e) => {
-            e.preventDefault();
-            ocrDropzone.classList.remove('border-blue-500', 'bg-blue-50/20');
-            if (e.dataTransfer.files.length > 0) {
-                handleOcrImage(e.dataTransfer.files[0]);
-            }
-        };
-
-        // Document-wide paste handler
-        document.addEventListener('paste', (e) => {
-            // Check if user is typing in standard text inputs
-            if (document.activeElement === latexInput || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
-                return;
-            }
-            const items = e.clipboardData.items;
-            for (let item of items) {
-                if (item.type.indexOf('image') !== -1) {
-                    const file = item.getAsFile();
-                    handleOcrImage(file);
-                    break;
-                }
-            }
-        });
-
-        function handleOcrImage(file) {
-            selectedOcrFile = file;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                ocrPreviewImage.src = e.target.result;
-                ocrPrompt.classList.add('hidden');
-                ocrPreviewContainer.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function convertOcrTextToLatex(text) {
-            let lines = text.split('\n');
-            let processedLines = lines.map(line => {
-                let clean = line.trim();
-                if (!clean) return '';
-                
-                // OCR Cleanups
-                clean = clean
-                    .replace(/≤/g, '\\le ')
-                    .replace(/<=\s*/g, '\\le ')
-                    .replace(/≥/g, '\\ge ')
-                    .replace(/>=\s*/g, '\\ge ')
-                    .replace(/⇔/g, '\\iff ')
-                    .replace(/<=>/g, '\\iff ')
-                    .replace(/⇒/g, '\\Rightarrow ')
-                    .replace(/=>/g, '\\Rightarrow ')
-                    .replace(/→/g, '\\to ')
-                    .replace(/->/g, '\\to ')
-                    .replace(/±/g, '\\pm ')
-                    .replace(/÷/g, ' \\div ')
-                    .replace(/\*/g, ' \\times ')
-                    // Match standalone multiplication 'x' or 'X' surrounded by uppercase letters or spaces (like A x B -> A \times B)
-                    .replace(/([A-Z])\s*[xX]\s*([A-Z])/g, '$1 \\times $2')
-                    .replace(/\s+[xX]\s+/g, ' \\times ')
-                    // Match dot used as multiplication (e.g. 3.4.5 -> 3 \cdot 4 \cdot 5 or s(A).s(B) -> s(A) \cdot s(B))
-                    .replace(/([0-9a-zA-Z\)])\.([0-9a-zA-Z\(])/g, '$1 \\cdot $2')
-                    // Match colons between numbers used as division
-                    .replace(/([0-9])\s*:\s*([0-9])/g, '$1 \\div $2');
-                
-                return processWordsToTextCommand(clean);
-            });
-            
-            processedLines = processedLines.filter(l => l.length > 0);
-            return processedLines.join(' \\\\ ');
-        }
-
-        function processWordsToTextCommand(str) {
-            const mathCommands = ['le', 'ge', 'iff', 'times', 'cdot', 'pm', 'infty', 'div', 'frac', 'sqrt', 'sin', 'cos', 'tan', 'log', 'ln', 'text', 'cases', 'begin', 'end', 'gather', 'Delta', 'Omega', 'alpha', 'beta', 'gamma', 'delta', 'pi', 'sigma', 'theta', 'lambda', 'phi', 'omega'];
-            const mathOperators = /[=\+\-\*\/<>\(\)\[\]\{\}\|≤≥⇔⇒→±÷:]/;
-            
-            let tokens = [];
-            let i = 0;
-            while (i < str.length) {
-                if (str[i] === '\\') {
-                    let j = i + 1;
-                    while (j < str.length && /[a-zA-Z]/.test(str[j])) {
-                        j++;
-                    }
-                    tokens.push({ type: 'math', val: str.substring(i, j) });
-                    i = j;
-                } else if (mathOperators.test(str[i])) {
-                    tokens.push({ type: 'math', val: str[i] });
-                    i++;
-                } else {
-                    let j = i;
-                    while (j < str.length && str[j] !== '\\' && !mathOperators.test(str[j])) {
-                        j++;
-                    }
-                    let val = str.substring(i, j);
-                    tokens.push({ type: 'text-candidate', val: val });
-                    i = j;
-                }
-            }
-            
-            let result = '';
-            for (let tok of tokens) {
-                if (tok.type === 'math') {
-                    result += tok.val;
-                } else {
-                    let hasWords = /[a-zA-Z\u00c0-\u017f]{2,}/.test(tok.val);
-                    if (hasWords) {
-                        // Wrap the whole sequence of words and spaces in a single \text{} block!
-                        // This preserves spaces and punctuation beautifully.
-                        result += `\\text{${tok.val}}`;
-                    } else {
-                        result += tok.val;
-                    }
-                }
-            }
-            return result;
-        }
-
-        ocrAnalyzeBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (!selectedOcrFile) return;
-
-            const originalBtnText = ocrAnalyzeBtn.innerHTML;
-            ocrAnalyzeBtn.disabled = true;
-            ocrAnalyzeBtn.innerHTML = `<span class="animate-pulse flex items-center justify-center gap-1">⚡ Analiz Ediliyor...</span>`;
-
-            Tesseract.recognize(
-                ocrPreviewImage.src,
-                'tur+eng',
-                { logger: m => console.log(m) }
-            ).then(({ data: { text } }) => {
-                let latex = convertOcrTextToLatex(text);
-                setMathfieldValue(latex);
-                updatePreview();
-                
-                ocrAnalyzeBtn.innerHTML = '✅ Tamamlandı!';
-                setTimeout(() => {
-                    ocrAnalyzeBtn.disabled = false;
-                    ocrAnalyzeBtn.innerHTML = originalBtnText;
-                }, 2000);
-            }).catch(err => {
-                console.error("OCR error:", err);
-                showError("Görsel okunurken bir hata oluştu.");
-                ocrAnalyzeBtn.disabled = false;
-                ocrAnalyzeBtn.innerHTML = originalBtnText;
-            });
-        };
-
-        // Initialize default formula value in editor
-        setMathfieldValue("\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}");
-    </script>
+    <script src="js/latex-parser.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/gemini-ocr.js"></script>
 </body>
+
 </html>

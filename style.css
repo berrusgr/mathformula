@@ -1,0 +1,379 @@
+/* General styling */
+body {
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark mode template symbols overrides */
+.dark #templateContainer mjx-container,
+.dark #templateContainer mjx-container * {
+    color: #f1f5f9 !important;
+    fill: #f1f5f9 !important;
+}
+
+/* MathLive adjustments */
+math-field {
+    --contains-highlight-background: transparent;
+    --caret-color: #2563eb;
+    --selection-background-color: #bfdbfe;
+    --selection-color: #000000;
+    border: none;
+    outline: none;
+    width: 100%;
+    text-align: center;
+    background: transparent;
+}
+
+math-field::part(virtual-keyboard-toggle) {
+    display: none;
+}
+
+/* 3D Keyboard Key styling for sidebar buttons */
+.key-button {
+    position: relative;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    box-shadow: 0 2.5px 0 0 #cbd5e1;
+    transform: translateY(0);
+    transition: all 0.05s ease;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.key-button:hover {
+    background-color: #f8fafc;
+    transform: translateY(0.5px);
+    box-shadow: 0 2px 0 0 #cbd5e1;
+}
+
+.key-button:active {
+    transform: translateY(2.5px);
+    box-shadow: 0 0 0 0 #cbd5e1;
+}
+
+/* Dark mode keyboard keys */
+.dark .key-button {
+    background-color: #1e293b;
+    border-color: #475569;
+    box-shadow: 0 2.5px 0 0 #0f172a;
+}
+
+.dark .key-button:hover {
+    background-color: #334155;
+    transform: translateY(0.5px);
+    box-shadow: 0 2px 0 0 #0f172a;
+}
+
+.dark .key-button:active {
+    transform: translateY(2.5px);
+    box-shadow: 0 0 0 0 #0f172a;
+}
+
+/* ====== CUSTOM CSS MATH RENDERER ENGINE STYLES ====== */
+.math-render-root {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    line-height: 1.2;
+    user-select: none;
+}
+
+/* Math variables and operators */
+.math-var {
+    font-style: italic;
+    font-family: inherit;
+    padding: 0 0.05em;
+}
+
+.math-symbol {
+    font-family: inherit;
+    padding: 0 0.1em;
+}
+
+.math-text-cmd {
+    font-family: inherit;
+    font-style: normal;
+    font-weight: normal;
+    padding: 0 0.1em;
+}
+
+.math-operator-large {
+    font-family: inherit;
+    font-style: normal;
+    font-weight: normal;
+    display: inline-block;
+    transform: scale(1.35);
+    margin: 0 0.2em;
+}
+
+/* Fractions */
+.math-frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 0.2em;
+    line-height: 1;
+}
+
+.math-num {
+    border-bottom: 2px solid currentColor;
+    width: 100%;
+    text-align: center;
+    padding: 0 0.2em 0.08em 0.2em;
+    font-size: 0.9em;
+}
+
+.math-den {
+    width: 100%;
+    text-align: center;
+    padding: 0.08em 0.2em 0 0.2em;
+    font-size: 0.9em;
+}
+
+/* Scripts (sub & sup) */
+.math-sub-wrap,
+.math-sup-wrap,
+.math-subsup-wrap {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+
+.math-base {
+    display: inline-block;
+}
+
+.math-sub {
+    font-size: 0.65em;
+    vertical-align: sub;
+    line-height: 1;
+    margin-left: 0.08em;
+    display: inline-block;
+}
+
+.math-sup {
+    font-size: 0.65em;
+    vertical-align: super;
+    line-height: 1;
+    margin-left: 0.08em;
+    display: inline-block;
+}
+
+.math-scripts {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 0.08em;
+    font-size: 0.65em;
+    line-height: 1;
+}
+
+.math-scripts .math-sup {
+    margin-left: 0;
+    margin-bottom: 0.15em;
+    font-size: 1em;
+}
+
+.math-scripts .math-sub {
+    margin-left: 0;
+    margin-top: 0.15em;
+    font-size: 1em;
+}
+
+/* Vertical limits operators (sums, limits) */
+.math-limits-op-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 0.2em;
+    line-height: 0.9;
+}
+
+.math-limit-top {
+    font-size: 0.6em;
+    display: block;
+    margin-bottom: 0.1em;
+    text-align: center;
+}
+
+.math-limit-bottom {
+    font-size: 0.6em;
+    display: block;
+    margin-top: 0.15em;
+    text-align: center;
+}
+
+.math-limit-base {
+    font-size: 1.45em;
+    line-height: 0.9;
+    display: block;
+    text-align: center;
+}
+
+/* Square roots */
+.math-root {
+    display: inline-flex;
+    align-items: stretch;
+    vertical-align: middle;
+    margin: 0 0.1em;
+    position: relative;
+}
+
+.math-root-index {
+    font-size: 0.55em;
+    align-self: flex-start;
+    margin-right: -0.38em;
+    margin-top: -0.05em;
+    z-index: 2;
+    font-weight: bold;
+}
+
+.math-root-symbol-wrap {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 0.72em;
+    margin-right: -0.05em;
+}
+
+.math-root-svg {
+    position: absolute;
+    left: 0;
+    top: 0.12em;
+    width: 100%;
+    height: calc(100% - 0.12em);
+}
+
+.math-root-content {
+    border-top: 2px solid currentColor;
+    padding-top: 0.08em;
+    padding-left: 0.15em;
+    padding-right: 0.15em;
+    margin-top: 0.12em;
+}
+
+/* Brackets / Parentheses */
+.math-bracket-wrap {
+    display: inline-flex;
+    align-items: stretch;
+    vertical-align: middle;
+    margin: 0 0.05em;
+}
+
+.math-bracket-symbol {
+    width: 0.6em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.math-bracket-content {
+    padding: 0 0.15em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Matrix */
+.math-matrix {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 0.25em;
+}
+
+.math-matrix-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin: 0.12em 0;
+}
+
+.math-matrix-cell {
+    padding: 0.2em 0.45em;
+    text-align: center;
+    display: inline-block;
+    min-width: 1.6em;
+}
+
+/* Decorators */
+.math-decorator-vec {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    line-height: 0.8;
+    margin: 0 0.05em;
+}
+
+.math-dec-arrow {
+    font-size: 0.58em;
+    line-height: 0.8;
+    margin-bottom: -0.1em;
+    font-weight: normal;
+}
+
+.math-decorator-hat {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    line-height: 0.8;
+    margin: 0 0.05em;
+}
+
+.math-dec-hat {
+    font-size: 0.72em;
+    line-height: 0.8;
+    margin-bottom: -0.22em;
+    font-weight: normal;
+}
+
+.math-decorator-overline {
+    border-top: 1.5px solid currentColor;
+    padding-top: 0.06em;
+    display: inline-block;
+    margin: 0 0.05em;
+}
+
+.math-text-normal {
+    font-style: normal !important;
+}
+
+.math-placeholder-box {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    border: 1px dashed currentColor;
+    opacity: 0.4;
+    border-radius: 0.15em;
+    vertical-align: middle;
+}
