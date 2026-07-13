@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="tr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Math Mobile - Formül Tasarım Arayüzü</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        darkbg: '#0f172a',
+                        darkcard: '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts for Web UI and Custom Math Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- High-quality exports and MathLive / MathJax -->
+    <script>
+        window.MathJax = {
+            startup: { typeset: false },
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            chtml: { scale: 1.1, mtextInheritFont: true }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    <script src="https://unpkg.com/mathlive"></script>
+
+    <style>
+        /* General styling */
+        body {
+            font-family: 'Poppins', 'Inter', sans-serif;
+            touch-action: manipulation;
+        }
+        
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        /* Dark mode template symbols overrides */
+        .dark #templateContainer mjx-container,
+        .dark #templateContainer mjx-container * {
+            color: #f1f5f9 !important;
+            fill: #f1f5f9 !important;
+        }
+
+        /* MathLive adjustments for Mobile */
+        math-field {
+            --contains-highlight-background: transparent;
+            --caret-color: #000000;
+            --selection-background-color: #bfdbfe;
+            --selection-color: #000000;
+            border: none;
+            outline: none;
+            width: 100%;
+            text-align: center;
+            background: transparent;
+        }
+        math-field::part(virtual-keyboard-toggle) {
+            display: flex;
+            color: #2563eb;
+        }
+        
+        /* ====== CUSTOM CSS MATH RENDERER ENGINE STYLES ====== */
+        .math-render-root {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            line-height: 1.2;
+            user-select: none;
+        }
+        
+        .math-variable {
+            font-style: italic;
+            margin: 0 0.05em;
+        }
+        
+        .math-number {
+            font-style: normal;
+            margin: 0 0.02em;
+        }
+
+        .math-symbol {
+            font-style: normal;
+            margin: 0 0.15em;
+            display: inline-block;
+        }
+
+        /* Fraction layout */
+        .math-fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 0.15em;
+            padding: 0 0.1em;
+        }
+        .math-fraction-num {
+            padding: 0 0.1em 0.05em 0.1em;
+            text-align: center;
+            width: 100%;
+        }
+        .math-fraction-den {
+            padding: 0.05em 0.1em 0 0.1em;
+            text-align: center;
+            width: 100%;
+        }
+        
+        /* Script limits vertically / superscripts / subscripts */
+        .math-scripts {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            font-size: 0.7em;
+            line-height: 1.0;
+            margin-left: 0.05em;
+        }
+        
+        .math-scripts-stacked {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            vertical-align: middle;
+            font-size: 0.7em;
+            margin-left: 0.1em;
+        }
+        .math-scripts-sup {
+            display: inline-block;
+            vertical-align: super;
+            font-size: 0.7em;
+            margin-left: 0.05em;
+        }
+        .math-scripts-sub {
+            display: inline-block;
+            vertical-align: sub;
+            font-size: 0.7em;
+            margin-left: 0.05em;
+        }
+
+        /* Square root rendering using flexbox and SVGs */
+        .math-root {
+            display: inline-flex;
+            align-items: stretch;
+            vertical-align: middle;
+            margin: 0 0.15em;
+            position: relative;
+        }
+        .math-root-surd {
+            display: flex;
+            align-items: stretch;
+            position: relative;
+            margin-right: -2px; /* Overlap to close connection gaps */
+            z-index: 10;
+        }
+        .math-root-surd svg {
+            height: 100%;
+            width: auto;
+            min-height: 1.2em;
+        }
+        .math-root-content {
+            border-top: 2px solid currentColor; /* Thicker border weight to match */
+            padding: 0.12em 0.2em 0 0.2em;
+            display: inline-block;
+            margin-left: 0;
+            z-index: 5;
+        }
+        
+        /* Root index position */
+        .math-root-index {
+            font-size: 0.55em;
+            align-self: flex-start;
+            margin-right: -0.5em;
+            margin-top: 0.1em;
+            z-index: 15;
+            font-weight: bold;
+        }
+
+        /* Stretchable parentheses / brackets / braces */
+        .math-delimited {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+        }
+        .math-delimiter {
+            display: flex;
+            align-items: stretch;
+            align-self: stretch;
+            user-select: none;
+        }
+        .math-delimiter svg {
+            height: 100%;
+            width: auto;
+        }
+        .math-delimited-content {
+            padding: 0 0.15em;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Matrix styling */
+        .math-matrix {
+            display: inline-grid;
+            gap: 0.3em 0.6em;
+            align-items: center;
+            justify-items: center;
+            vertical-align: middle;
+            margin: 0 0.2em;
+        }
+
+        /* Operators with limits (limits stacked) */
+        .math-lim-op {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 0.15em;
+        }
+        .math-lim-op-sym {
+            font-size: 1.4em;
+            line-height: 1.0;
+        }
+        .math-lim-op-under {
+            font-size: 0.6em;
+            margin-top: 0.1em;
+        }
+        .math-lim-op-over {
+            font-size: 0.6em;
+            margin-bottom: 0.1em;
+        }
+
+        .math-space {
+            display: inline-block;
+            margin: 0 0.05em;
+        }
+        .math-text-normal {
+            font-style: normal !important;
+        }
+        .math-placeholder-box {
+            display: inline-block;
+            width: 1.1em;
+            height: 1.1em;
+            border: 1px dashed currentColor;
+            opacity: 0.4;
+            border-radius: 0.15em;
+            vertical-align: middle;
+            margin: 0 0.1em;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkbg text-slate-900 dark:text-slate-100 h-screen flex flex-col overflow-hidden transition-colors duration-300">
+
+    <!-- Error Debug Banner for Mobile -->
+    <div id="jsErrorBanner" class="hidden fixed top-0 inset-x-0 bg-red-600 text-white p-3.5 text-xs font-mono z-[10000] flex justify-between items-center shadow-lg">
+        <span id="jsErrorMessage" class="break-all pr-2"></span>
+        <button onclick="document.getElementById('jsErrorBanner').classList.add('hidden')" class="bg-red-800 hover:bg-red-900 px-2.5 py-1.5 rounded text-[10px] font-bold">KAPAT</button>
+    </div>
+
+    <!-- Header Panel -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex justify-between items-center shadow-sm shrink-0">
+        <div class="flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="text-blue-600 dark:text-blue-400 shrink-0" style="height: 18px; width: 18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="M9 7h-3a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3m-1-4l-3 3m0 0l-3-3m3 3V4" /></svg>
+            <span class="font-bold text-sm tracking-tight text-slate-800 dark:text-slate-100">Math Mobile</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="keyboardToggle" class="px-2 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold flex items-center gap-1 transition" title="Klavye Göster/Gizle">⌨️</button>
+            <button id="themeToggle" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs transition">🌙/☀️</button>
+            <button id="downloadBtn" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold text-xs flex items-center gap-1 shadow-sm active:scale-[0.95] transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                İndir
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Canvas Card -->
+    <div class="flex-grow flex flex-col p-4 bg-slate-50 dark:bg-slate-950 relative min-h-[160px] max-h-[30vh] shrink-0 border-b border-slate-200 dark:border-slate-900">
+        <div id="designPreviewContainer" class="w-full h-full bg-white border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center p-6 shadow-sm relative overflow-auto">
+            <div id="formulaGridBg" class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 16px 16px;"></div>
+            
+            <div class="z-10 w-full flex items-center justify-center">
+                <math-field id="mathPreview" class="text-3xl w-full" style="color: #000000;"></math-field>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard & Space Helper Bar -->
+    <div class="flex gap-2 justify-center px-4 py-2 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <button id="addSpaceBtn" class="flex-1 py-1.5 px-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex justify-center items-center gap-1 shadow-xs">
+            <span>⌴</span> Boşluk Ekle
+        </button>
+        <button id="closeKeyboardBtn" class="flex-1 py-1.5 px-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/20 transition flex justify-center items-center gap-1 shadow-xs">
+            <span>📴</span> Klavyeyi Kapat
+        </button>
+    </div>
+
+    <!-- Tabs Content Container -->
+    <div class="flex-grow bg-white dark:bg-slate-900 flex flex-col overflow-hidden relative">
+        <!-- Tabs headers -->
+        <div class="flex border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] tracking-wider uppercase shrink-0">
+            <button id="tabTemplatesBtn" class="flex-1 py-3 text-center border-b-2 border-blue-500 text-blue-600 focus:outline-none">Şablonlar</button>
+            <button id="tabStyleBtn" class="flex-1 py-3 text-center border-b-2 border-transparent focus:outline-none">Tasarım</button>
+            <button id="tabCodeBtn" class="flex-1 py-3 text-center border-b-2 border-transparent focus:outline-none">LaTeX Kodu</button>
+        </div>
+        
+        <!-- Tab panels (scrollable area) -->
+        <div class="flex-grow overflow-y-auto p-4 pb-6">
+            <!-- Panel 1: Templates (Active by default) -->
+            <div id="panelTemplates" class="space-y-4">
+                <!-- Mobile Category selector -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-400 shrink-0">Kategori:</span>
+                    <select id="mobileCategorySelect" class="flex-grow p-2 border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-slate-900 rounded-lg text-xs outline-none cursor-pointer font-medium focus:ring-1 focus:ring-blue-500"></select>
+                </div>
+                
+                <!-- Grid of buttons -->
+                <div id="templateContainer" class="grid grid-cols-3 gap-2"></div>
+            </div>
+            
+            <!-- Panel 2: Style (Hidden by default) -->
+            <div id="panelStyle" class="hidden space-y-4">
+                <!-- Yazı Tipi -->
+                <div id="fontSelectWrapper">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Yazı Tipi (Font Family)</label>
+                    <select id="fontFamily" class="w-full p-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 rounded-lg text-xs outline-none cursor-pointer">
+                        <option value="Poppins" selected>Poppins (Modern Sans-serif)</option>
+                        <option value="Inter">Inter (Temiz Sans-serif)</option>
+                        <option value="Montserrat">Montserrat (Geometrik)</option>
+                        <option value="Playfair Display">Playfair Display (Zarif Serif)</option>
+                        <option value="Arial">Arial (Sistem Sans-serif)</option>
+                        <option value="Times New Roman">Times New Roman (Klasik Serif)</option>
+                    </select>
+                    <!-- Font Preview Box -->
+                    <div id="fontSamplePreview" class="mt-2.5 p-3 border border-slate-200 dark:border-slate-800 rounded-xl select-none text-[11px] font-medium text-slate-500 dark:text-slate-400 transition-all duration-300 flex flex-col items-center bg-white" style="background-color: #ffffff;">
+                        <span class="mb-1 text-[8px] uppercase tracking-wider opacity-60">PNG Çıktı Görünümü (Sidebar Önizleme):</span>
+                        <div class="w-full overflow-x-auto flex justify-center py-1" id="fontSampleText"></div>
+                    </div>
+                </div>
+                
+                <!-- Yazı Boyutu -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Yazı Boyutu</label>
+                        <span id="fontSizeLabel" class="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">(24px)</span>
+                    </div>
+                    <input type="range" id="fontSize" min="16" max="100" value="24" class="w-full accent-blue-600 cursor-pointer">
+                </div>
+                
+                <!-- Yazı Rengi -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Yazı Rengi</label>
+                        <div class="flex items-center gap-2">
+                            <div id="colorDisplay" class="w-6 h-6 rounded-md border border-slate-300 dark:border-slate-600 cursor-pointer shadow-sm" style="background-color: #000000;"></div>
+                            <span id="colorHexText" class="text-xs font-mono font-semibold opacity-60">#000000</span>
+                        </div>
+                    </div>
+                    <!-- Color Grid embedded directly to save screen space on mobile -->
+                    <div id="colorGrid" class="grid grid-cols-10 gap-1.5 mb-2.5 bg-slate-50 dark:bg-slate-900 p-2 rounded-xl"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-bold opacity-60">HEX:</span>
+                        <input type="text" id="hexInput" value="#000000" class="w-full p-1 border border-slate-200 dark:border-slate-800 rounded text-center font-mono text-xs bg-slate-50 dark:bg-slate-900 outline-none uppercase">
+                    </div>
+                </div>
+                
+                <!-- Arka Plan Rengi Seçimi -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">PNG Arka Planı (Background)</label>
+                    <div class="grid grid-cols-2 gap-2" id="bgOptionGrid">
+                        <button data-bg="transparent" class="bg-transparent border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center active-bg-btn" style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;">Şeffaf</button>
+                        <button data-bg="#ffffff" class="bg-white border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center text-slate-900 shadow-sm">Beyaz</button>
+                    </div>
+                </div>
+
+                <!-- Çizim Motoru Seçimi -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Çizim Motoru (Render Engine)</label>
+                    <select id="renderMode" class="w-full p-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 rounded-lg text-xs outline-none cursor-pointer">
+                        <option value="custom" selected>Özel Tasarım Modu (Özel Yazı Tipleri)</option>
+                        <option value="mathjax">Klasik Matematik (MathJax TeX)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Panel 3: LaTeX Code (Hidden by default) -->
+            <div id="panelCode" class="hidden space-y-2">
+                <label class="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">LaTeX Kodu (İzleme ve Manuel Giriş)</label>
+                <textarea id="latexInput" class="w-full h-32 p-3 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-xs text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all" placeholder="LaTeX kodu buraya yazılabilir..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hata Bildirim Modalı -->
+    <div id="errorModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-[280px] w-full mx-4 shadow-2xl border border-red-100 dark:border-red-950">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="text-xl">⚠️</span>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Formül Hatası</h3>
+            </div>
+            <p id="errorModalMessage" class="text-slate-600 dark:text-slate-300 mb-4 text-xs leading-relaxed"></p>
+            <button onclick="document.getElementById('errorModal').classList.add('hidden')" class="w-full bg-slate-900 dark:bg-slate-700 text-white text-xs font-bold py-2 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-650 transition">Tamam</button>
+        </div>
+    </div>
+
+    <!-- Developer Credit Signature -->
+    <a href="https://instagram.com/berrusagir" target="_blank" rel="noopener noreferrer" class="fixed bottom-16 right-3 text-[9px] text-slate-400 dark:text-slate-600 hover:text-brand-500 font-medium z-50 transition-colors cursor-pointer">
+        Berru Sağır
+    </a>
+
+    <!-- Hidden Capturing Container for PNG Downloads -->
+    <div id="exportWrapper" class="absolute bg-white flex items-center justify-center" style="left: 0px; top: 0px; z-index: -9999; pointer-events: none; opacity: 0; padding: 40px; border-radius: 0px;">
+        <!-- Compiled DOM will be appended here temporarily before capturing -->
+    </div>
+
+    <script>
+        // Error handler for mobile debugging
+        window.onerror = function(message, source, lineno, colno, error) {
+            const banner = document.getElementById('jsErrorBanner');
+            const msgSpan = document.getElementById('jsErrorMessage');
+            if (banner && msgSpan) {
+                msgSpan.innerText = `Hata: ${message} (Satır: ${lineno}:${colno})`;
+                banner.classList.remove('hidden');
+            }
+            return false;
+        };
+
+        // ====== CONTEXT & DATA DEFINITIONS ======
+        const categories = {
+            "Matematik": [
+                { name: "Toplama/Çıkarma", tex: "x + y - z" },
+                { name: "Çarpma (Nokta)", tex: "x \\cdot y" },
+                { name: "Çarpma (Çarpı)", tex: "x \\times y" },
+                { name: "Bölme Oranı", tex: "x \\div y" },
+                { name: "Artı Eksi", tex: "x \\pm y" },
+                { name: "Kök İçi (Kare)", tex: "\\sqrt{x}" },
+                { name: "Kök İçi (Dereceli)", tex: "\\sqrt[n]{x}" },
+                { name: "Basit Kesir", tex: "\\frac{x}{y}" },
+                { name: "İç İçe Kesir", tex: "\\frac{\\frac{a}{b}}{\\frac{c}{d}}" },
+                { name: "Üslü Sayı", tex: "x^{n}" },
+                { name: "Alt İndis", tex: "x_{i}" },
+                { name: "Çift İndis", tex: "x_{i}^{n}" }
+            ],
+            "Parantezler": [
+                { name: "Normal Parantez", tex: "\\left( x \\right)" },
+                { name: "Köşeli Parantez", tex: "\\left[ x \\right]" },
+                { name: "Süslü Parantez", tex: "\\left\\{ x \\right\\}" },
+                { name: "Mutlak Değer", tex: "\\left| x \\right|" },
+                { name: "Büyük Parantez Kesirli", tex: "\\left( \\frac{x}{y} \\right)" },
+                { name: "Küme Gösterimi", tex: "\\left\\{ x \\in \\mathbb{R} \\mid x > 0 \\right\\}" }
+            ],
+            "Limit & Fonksiyon": [
+                { name: "Limit Gösterimi", tex: "\\lim_{x \\to x_0} f(x)" },
+                { name: "Sonsuz Limit", tex: "\\lim_{x \\to \\infty} \\frac{1}{x} = 0" },
+                { name: "Parçalı Fonksiyon", tex: "f(x) = \\begin{cases} x & x \\ge 0 \\\\ -x & x < 0 \\end{cases}" },
+                { name: "Türev İşareti", tex: "f'(x) = \\frac{dy}{dx}" },
+                { name: "Kısmi Türev", tex: "\\frac{\\partial f}{\\partial x}" }
+            ],
+            "Matrisler": [
+                { name: "2x2 Matris", tex: "\\begin{matrix} a & b \\\\ c & d \\end{matrix}" },
+                { name: "2x2 Parantezli Matris", tex: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" },
+                { name: "2x2 Köşeli Matris", tex: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}" },
+                { name: "Dikey Vektör", tex: "\\begin{pmatrix} x_1 \\\\ x_2 \\\\ x_3 \\end{pmatrix}" }
+            ],
+            "Semboller": [
+                { name: "Sonsuzluk", tex: "\\infty" },
+                { name: "Pi Sayısı", tex: "\\pi" },
+                { name: "Alfa", tex: "\\alpha" },
+                { name: "Beta", tex: "\\beta" },
+                { name: "Gama", tex: "\\gamma" },
+                { name: "Teta", tex: "\\theta" },
+                { name: "Delta", tex: "\\delta" },
+                { name: "Üç Nokta", tex: "\\dots" },
+                { name: "Derece", tex: "90^{\\circ}" }
+            ],
+            "Operatörler": [
+                { name: "Toplam Sembolü", tex: "\\sum_{i=1}^{n} i" },
+                { name: "Çarpım Sembolü", tex: "\\prod_{i=1}^{n} x_i" },
+                { name: "Belirsiz İntegral", tex: "\\int f(x) dx" },
+                { name: "Belirli İntegral", tex: "\\int_{a}^{b} f(x) dx" },
+                { name: "Çift İntegral", tex: "\\iint_{D} dx dy" }
+            ],
+            "Mantık & Kümeler": [
+                { name: "Eşittir", tex: "x = y" },
+                { name: "Eşit Değildir", tex: "x \\neq y" },
+                { name: "Yaklaşık Eşit", tex: "x \\approx y" },
+                { name: "Büyüktür/Küçüktür", tex: "x > y \\quad a < b" },
+                { name: "Büyük Eşit/Küçük Eşit", tex: "x \\ge y \\quad a \\le b" },
+                { name: "Elemanıdır", tex: "x \\in A" },
+                { name: "Kesişim", tex: "A \\cap B" },
+                { name: "Birleşim", tex: "A \\cup B" },
+                { name: "İçerir / Alt Küme", tex: "A \\subset B" }
+            ]
+        };
+
+        const standardColors = [
+            "#000000", "#2563eb", "#3b82f6", "#10b981", "#14b8a6", "#f59e0b",
+            "#ef4444", "#ec4899", "#8b5cf6", "#6366f1", "#0f172a",
+            "#ffffff", "#f3f4f6", "#cbd5e1", "#64748b", "#334155",
+            "#e11d48", "#d97706", "#059669", "#0891b2", "#4f46e5"
+        ];
+
+        let currentColor = "#000000";
+        let currentBgColor = "#ffffff"; // Default background white
+        
+        // Element references
+        const mf = document.getElementById('mathPreview');
+        const latexInput = document.getElementById('latexInput');
+        const templateContainer = document.getElementById('templateContainer');
+        const renderMode = document.getElementById('renderMode');
+        const fontFamily = document.getElementById('fontFamily');
+        const fontSamplePreview = document.getElementById('fontSamplePreview');
+        const fontSampleText = document.getElementById('fontSampleText');
+        const fontSelectWrapper = document.getElementById('fontSelectWrapper');
+        const fontSize = document.getElementById('fontSize');
+        const fontSizeLabel = document.getElementById('fontSizeLabel');
+        const colorDisplay = document.getElementById('colorDisplay');
+        const colorHexText = document.getElementById('colorHexText');
+        const colorGrid = document.getElementById('colorGrid');
+        const hexInput = document.getElementById('hexInput');
+        const designPreviewContainer = document.getElementById('designPreviewContainer');
+        const bgOptionGrid = document.getElementById('bgOptionGrid');
+
+        // Initial setup for color display
+        colorDisplay.style.backgroundColor = currentColor;
+        colorHexText.innerText = currentColor.toUpperCase();
+
+        // Modal error handler
+        function showError(msg) {
+            document.getElementById('errorModalMessage').innerText = msg;
+            document.getElementById('errorModal').classList.remove('hidden');
+        }
+
+        // Fill mobile templates selector
+        const catSelect = document.getElementById('mobileCategorySelect');
+        Object.keys(categories).forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerText = cat;
+            catSelect.appendChild(opt);
+        });
+
+        // Function to render categories templates in grid on mobile
+        function renderMobileTemplates(catName) {
+            templateContainer.innerHTML = '';
+            const items = categories[catName];
+            items.forEach(item => {
+                const tex = item.tex;
+                const name = item.name;
+                const extraClass = item.class || '';
+
+                const btn = document.createElement('button');
+                btn.className = "bg-slate-50 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700/80 p-2 rounded-lg text-[10px] text-center border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center justify-center shadow-xs min-h-[50px] " + extraClass;
+                btn.innerHTML = `<div class="mjx-btn-wrapper">$$${tex}$$</div>`;
+                btn.title = name;
+
+                btn.onclick = () => { 
+                    const interactiveTex = tex.replace(/\\square/g, '\\placeholder{}');
+                    mf.executeCommand(['insert', interactiveTex]);
+                    mf.focus();
+                };
+
+                templateContainer.appendChild(btn);
+            });
+            // Compile MathJax inside the newly rendered buttons
+            if (window.MathJax) {
+                MathJax.typesetPromise([templateContainer]).catch(err => {
+                    console.error("MathJax sidebar error:", err);
+                });
+            }
+        }
+
+        // Render initial category templates
+        renderMobileTemplates(Object.keys(categories)[0]);
+
+        catSelect.onchange = (e) => {
+            renderMobileTemplates(e.target.value);
+        };
+
+        // Populate inline Color Grid on mobile
+        standardColors.forEach(color => {
+            const gridBtn = document.createElement('button');
+            gridBtn.className = "w-5 h-5 rounded border border-slate-200 dark:border-slate-700 transition hover:scale-110";
+            gridBtn.style.backgroundColor = color;
+            gridBtn.onclick = () => applyColor(color);
+            colorGrid.appendChild(gridBtn);
+        });
+
+        function applyColor(color) {
+            currentColor = color;
+            colorDisplay.style.backgroundColor = color;
+            colorHexText.innerText = color.toUpperCase();
+            hexInput.value = color.toUpperCase();
+            updatePreview();
+        }
+
+        // Background PNG Selection
+        bgOptionGrid.querySelectorAll('button').forEach(btn => {
+            btn.onclick = () => {
+                bgOptionGrid.querySelectorAll('button').forEach(b => {
+                    b.classList.remove('border-2', 'border-blue-500', 'shadow-sm');
+                    b.classList.add('border', 'border-slate-200', 'dark:border-slate-700');
+                });
+                btn.classList.add('border-2', 'border-blue-500', 'shadow-sm');
+                btn.classList.remove('border', 'border-slate-200', 'dark:border-slate-700');
+                
+                currentBgColor = btn.getAttribute('data-bg');
+                
+                // Style the design preview container dynamically
+                if (currentBgColor === 'transparent') {
+                    designPreviewContainer.style.backgroundColor = '';
+                    designPreviewContainer.style.backgroundImage = 'linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%)';
+                    designPreviewContainer.style.backgroundSize = '20px 20px';
+                    designPreviewContainer.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
+                    
+                    // Style the sidebar preview to match the chess transparent grid
+                    fontSamplePreview.style.backgroundColor = '';
+                    fontSamplePreview.style.backgroundImage = 'linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%)';
+                    fontSamplePreview.style.backgroundSize = '12px 12px';
+                    fontSamplePreview.style.backgroundPosition = '0 0, 0 6px, 6px -6px, -6px 0px';
+                } else {
+                    designPreviewContainer.style.backgroundImage = 'none';
+                    designPreviewContainer.style.backgroundColor = currentBgColor;
+                    
+                    // Style the sidebar preview to match the selected color background
+                    fontSamplePreview.style.backgroundImage = 'none';
+                    fontSamplePreview.style.backgroundColor = currentBgColor;
+                }
+                updatePreview();
+            };
+        });
+
+        // Initialize design container preview back to white (both main and sidebar previews)
+        designPreviewContainer.style.backgroundColor = '#ffffff';
+        fontSamplePreview.style.backgroundColor = '#ffffff';
+
+        // Toggling render engine
+        renderMode.onchange = () => {
+            if (renderMode.value === 'mathjax') {
+                fontSelectWrapper.style.opacity = '0.5';
+                fontFamily.disabled = true;
+            } else {
+                fontSelectWrapper.style.opacity = '1';
+                fontFamily.disabled = false;
+            }
+            updatePreview();
+        };
+
+        fontFamily.onchange = () => updatePreview();
+        fontSize.oninput = (e) => {
+            fontSizeLabel.innerText = `(${e.target.value}px)`;
+            updatePreview();
+        };
+
+        // Tab switching logic
+        const tabTemplatesBtn = document.getElementById('tabTemplatesBtn');
+        const tabStyleBtn = document.getElementById('tabStyleBtn');
+        const tabCodeBtn = document.getElementById('tabCodeBtn');
+        
+        const panelTemplates = document.getElementById('panelTemplates');
+        const panelStyle = document.getElementById('panelStyle');
+        const panelCode = document.getElementById('panelCode');
+        
+        function switchTab(activeBtn, activePanel) {
+            [tabTemplatesBtn, tabStyleBtn, tabCodeBtn].forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-slate-500', 'dark:text-slate-400');
+            });
+            [panelTemplates, panelStyle, panelCode].forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            
+            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'dark:text-slate-400');
+            activeBtn.classList.add('border-blue-500', 'text-blue-600');
+            activePanel.classList.remove('hidden');
+        }
+        
+        tabTemplatesBtn.onclick = () => switchTab(tabTemplatesBtn, panelTemplates);
+        tabStyleBtn.onclick = () => switchTab(tabStyleBtn, panelStyle);
+        tabCodeBtn.onclick = () => switchTab(tabCodeBtn, panelCode);
+
+        // Keyboard toggle command
+        document.getElementById('keyboardToggle').onclick = () => {
+            if (mf) {
+                mf.focus();
+                if (window.mathVirtualKeyboard) {
+                    window.mathVirtualKeyboard.visible = !window.mathVirtualKeyboard.visible;
+                } else {
+                    mf.executeCommand(['toggleVirtualKeyboard']);
+                }
+            }
+        };
+
+        // ====== RECURSIVE LaTeX TO CSS FLEXBOX PARSER & COMPILER ======
+        
+        // 1. Tokenizer
+        function tokenize(str) {
+            let i = 0;
+            const tokens = [];
+            while (i < str.length) {
+                const c = str[i];
+                if (c === '{') {
+                    tokens.push({ type: 'OPEN', val: '{' });
+                    i++;
+                } else if (c === '}') {
+                    tokens.push({ type: 'CLOSE', val: '}' });
+                    i++;
+                } else if (c === '_') {
+                    tokens.push({ type: 'SUB', val: '_' });
+                    i++;
+                } else if (c === '^') {
+                    tokens.push({ type: 'SUP', val: '^' });
+                    i++;
+                } else if (c === '\\') {
+                    let j = i + 1;
+                    if (j < str.length && (str[j] === '(' || str[j] === ')' || str[j] === '[' || str[j] === ']' || str[j] === '{' || str[j] === '}' || str[j] === ',' || str[j] === ';' || str[j] === '!' || str[j] === '\\' || str[j] === '|' || str[j] === ' ')) {
+                        tokens.push({ type: 'COMMAND', val: '\\' + str[j] });
+                        i = j + 1;
+                    } else {
+                        while (j < str.length && /[a-zA-Z]/.test(str[j])) {
+                            j++;
+                        }
+                        tokens.push({ type: 'COMMAND', val: str.substring(i, j) });
+                        i = j;
+                    }
+                } else if (/\s/.test(c)) {
+                    tokens.push({ type: 'SPACE', val: ' ' });
+                    i++;
+                } else {
+                    tokens.push({ type: 'CHAR', val: c });
+                    i++;
+                }
+            }
+            return tokens;
+        }
+
+        // 2. Parser
+        function parse(tokens) {
+            let pos = 0;
+
+            function parseGroup() {
+                const group = [];
+                while (pos < tokens.length) {
+                    const token = tokens[pos];
+                    if (token.type === 'CLOSE') {
+                        break;
+                    }
+                    group.push(parseNode());
+                }
+                return group;
+            }
+
+            function parseNode() {
+                const token = tokens[pos];
+                if (!token) return { type: 'Empty' };
+
+                if (token.type === 'OPEN') {
+                    pos++; // consume {
+                    const children = parseGroup();
+                    if (pos < tokens.length && tokens[pos].type === 'CLOSE') {
+                        pos++; // consume }
+                    }
+                    return { type: 'Group', children };
+                }
+
+                if (token.type === 'COMMAND') {
+                    const cmd = token.val;
+                    pos++; // consume command
+
+                    // Special commands: \frac, \sqrt, \left, \right
+                    if (cmd === '\\frac') {
+                        const num = parseNode();
+                        const den = parseNode();
+                        return { type: 'Fraction', num, den };
+                    }
+                    if (cmd === '\\sqrt') {
+                        let index = null;
+                        // Check if square bracket is present for custom root index: \sqrt[n]{x}
+                        if (pos < tokens.length && tokens[pos].type === 'CHAR' && tokens[pos].val === '[') {
+                            pos++; // consume [
+                            const indexTokens = [];
+                            while (pos < tokens.length) {
+                                if (tokens[pos].type === 'CHAR' && tokens[pos].val === ']') {
+                                    pos++; // consume ]
+                                    break;
+                                }
+                                indexTokens.push(tokens[pos]);
+                                pos++;
+                            }
+                            index = parse(indexTokens);
+                        }
+                        const content = parseNode();
+                        return { type: 'Root', content, index };
+                    }
+                    if (cmd === '\\left') {
+                        const delimToken = tokens[pos];
+                        let delim = '(';
+                        if (delimToken) {
+                            delim = delimToken.val;
+                            pos++; // consume delimiter symbol
+                        }
+                        // Parse content until matching \right
+                        const children = [];
+                        let rightDelim = ')';
+                        while (pos < tokens.length) {
+                            if (tokens[pos].type === 'COMMAND' && tokens[pos].val === '\\right') {
+                                pos++; // consume \right
+                                const rdToken = tokens[pos];
+                                if (rdToken) {
+                                    rightDelim = rdToken.val;
+                                    pos++; // consume right delimiter symbol
+                                }
+                                break;
+                            }
+                            children.push(parseNode());
+                        }
+                        return { type: 'Delimited', left: delim, right: rightDelim, children };
+                    }
+                    if (cmd === '\\begin') {
+                        // Environment (matrix, pmatrix, bmatrix, cases)
+                        const envName = parseBraceArgument();
+                        const rows = [];
+                        let currentRow = [];
+                        
+                        while (pos < tokens.length) {
+                            if (tokens[pos].type === 'COMMAND' && tokens[pos].val === '\\end') {
+                                pos++; // consume \end
+                                const endEnvName = parseBraceArgument();
+                                if (currentRow.length > 0) {
+                                    rows.push(currentRow);
+                                }
+                                break;
+                            }
+                            
+                            const node = parseNode();
+                            if (node.type === 'Command' && node.val === '\\\\') {
+                                rows.push(currentRow);
+                                currentRow = [];
+                            } else if (node.type === 'Char' && node.val === '&') {
+                                // column separator, skip or insert boundary marker
+                            } else {
+                                currentRow.push(node);
+                            }
+                        }
+                        return { type: 'Environment', name: envName, rows };
+                    }
+                    
+                    // Large operators with optional limits stack (e.g., \sum, \prod, \int)
+                    if (['\\sum', '\\prod', '\\lim', '\\int', '\\iint'].includes(cmd)) {
+                        let under = null;
+                        let over = null;
+                        
+                        // Check if limits attach: _ and ^
+                        while (pos < tokens.length) {
+                            if (tokens[pos].type === 'SUB') {
+                                pos++; // consume _
+                                under = parseNode();
+                            } else if (tokens[pos].type === 'SUP') {
+                                pos++; // consume ^
+                                over = parseNode();
+                            } else {
+                                break;
+                            }
+                        }
+                        return { type: 'LimitOperator', operator: cmd, under, over };
+                    }
+
+                    // Standard commands/spacings
+                    return { type: 'Command', val: cmd };
+                }
+
+                if (token.type === 'CHAR') {
+                    const charVal = token.val;
+                    pos++; // consume char
+
+                    // Check for attachment scripts: _ and ^
+                    let sub = null;
+                    let sup = null;
+                    
+                    while (pos < tokens.length) {
+                        if (tokens[pos].type === 'SUB') {
+                            pos++;
+                            sub = parseNode();
+                        } else if (tokens[pos].type === 'SUP') {
+                            pos++;
+                            sup = parseNode();
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (sub || sup) {
+                        return { type: 'ScriptedChar', base: charVal, sub, sup };
+                    }
+                    return { type: 'Char', val: charVal };
+                }
+
+                if (token.type === 'SPACE') {
+                    pos++;
+                    return { type: 'Space' };
+                }
+
+                pos++;
+                return { type: 'Empty' };
+            }
+
+            function parseBraceArgument() {
+                if (pos < tokens.length && tokens[pos].type === 'OPEN') pos++; // consume {
+                let val = '';
+                while (pos < tokens.length && tokens[pos].type !== 'CLOSE') {
+                    val += tokens[pos].val;
+                    pos++;
+                }
+                if (pos < tokens.length && tokens[pos].type === 'CLOSE') pos++; // consume }
+                return val;
+            }
+
+            const rootNodes = [];
+            while (pos < tokens.length) {
+                rootNodes.push(parseNode());
+            }
+            return rootNodes;
+        }
+
+        // 3. HTML Renderer (Flexbox & Native Styling output)
+        function renderNodesToHtml(nodes) {
+            if (!nodes) return '';
+            if (!Array.isArray(nodes)) return renderNodeToHtml(nodes);
+            return nodes.map(node => renderNodeToHtml(node)).join('');
+        }
+
+        function renderNodeToHtml(node) {
+            if (!node) return '';
+
+            switch (node.type) {
+                case 'Group':
+                    return `<span class="math-group">${renderNodesToHtml(node.children)}</span>`;
+
+                case 'Char':
+                    const isLetter = /[a-zA-Z]/.test(node.val);
+                    if (isLetter) {
+                        return `<span class="math-variable">${node.val}</span>`;
+                    }
+                    const isDigit = /[0-9]/.test(node.val);
+                    if (isDigit) {
+                        return `<span class="math-number">${node.val}</span>`;
+                    }
+                    return `<span class="math-symbol">${node.val}</span>`;
+
+                case 'ScriptedChar':
+                    const baseHtml = renderNodeToHtml({ type: 'Char', val: node.base });
+                    
+                    if (node.sub && node.sup) {
+                        // Stacked script
+                        return `<span class="math-group" style="display: inline-flex; align-items: center; vertical-align: middle;">
+                            ${baseHtml}
+                            <span class="math-scripts">
+                                <span class="math-scripts-sup" style="margin-left:0; font-size: 1em;">${renderNodesToHtml(node.sup)}</span>
+                                <span class="math-scripts-sub" style="margin-left:0; font-size: 1em; margin-top: 0.1em;">${renderNodesToHtml(node.sub)}</span>
+                            </span>
+                        </span>`;
+                    } else if (node.sup) {
+                        return `<span class="math-group" style="display: inline-flex; align-items: center; vertical-align: middle;">
+                            ${baseHtml}
+                            <span class="math-scripts-sup">${renderNodesToHtml(node.sup)}</span>
+                        </span>`;
+                    } else if (node.sub) {
+                        return `<span class="math-group" style="display: inline-flex; align-items: center; vertical-align: middle;">
+                            ${baseHtml}
+                            <span class="math-scripts-sub">${renderNodesToHtml(node.sub)}</span>
+                        </span>`;
+                    }
+                    return baseHtml;
+
+                case 'Fraction':
+                    return `<span class="math-fraction">
+                        <span class="math-fraction-num" style="border-bottom: 2px solid currentColor;">${renderNodesToHtml(node.num)}</span>
+                        <span class="math-fraction-den">${renderNodesToHtml(node.den)}</span>
+                    </span>`;
+
+                case 'Root':
+                    const rootIndexHtml = node.index ? `<span class="math-root-index">${renderNodesToHtml(node.index)}</span>` : '';
+                    return `<span class="math-root">
+                        ${rootIndexHtml}
+                        <span class="math-root-surd">
+                            <svg viewBox="0 0 10 10" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round;">
+                                <path d="M 0,5 L 2,5 L 4,9 L 10,0" />
+                            </svg>
+                        </span>
+                        <span class="math-root-content">${renderNodesToHtml(node.content)}</span>
+                    </span>`;
+
+                case 'Delimited':
+                    let leftSvg = '';
+                    let rightSvg = '';
+                    
+                    if (node.left === '(') {
+                        leftSvg = `<svg viewBox="0 0 10 100" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linecap: round;"><path d="M 9,2 C 2,20 2,80 9,98" /></svg>`;
+                    } else if (node.left === '[') {
+                        leftSvg = `<svg viewBox="0 0 10 100" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round;"><path d="M 8,2 L 2,2 L 2,98 L 8,98" /></svg>`;
+                    } else if (node.left === '\\{') {
+                        leftSvg = `<svg viewBox="0 0 10 100" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round;"><path d="M 8,2 C 4,10 4,45 8,49 C 4,51 4,90 8,98" /></svg>`;
+                    } else if (node.left === '|' || node.left === '\\|') {
+                        leftSvg = `<svg viewBox="0 0 10 100" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke;"><path d="M 5,2 L 5,98" /></svg>`;
+                    } else {
+                        leftSvg = `<span class="math-symbol">${node.left}</span>`;
+                    }
+                    
+                    if (node.right === ')') {
+                        rightSvg = `<svg viewBox="0 0 10 100" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linecap: round;"><path d="M 1,2 C 8,20 8,80 1,98" /></svg>`;
+                    } else if (node.right === ']') {
+                        rightSvg = `<svg viewBox="0 0 10 100" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round;"><path d="M 2,2 L 8,2 L 8,98 L 2,98" /></svg>`;
+                    } else if (node.right === '\\}') {
+                        rightSvg = `<svg viewBox="0 0 10 100" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round;"><path d="M 2,2 C 6,10 6,45 2,49 C 6,51 6,90 2,98" /></svg>`;
+                    } else if (node.right === '|' || node.right === '\\|') {
+                        rightSvg = `<svg viewBox="0 0 10 100" preserveAspectRatio="none" style="stroke: currentColor; fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke;"><path d="M 5,2 L 5,98" /></svg>`;
+                    } else {
+                        rightSvg = `<span class="math-symbol">${node.right}</span>`;
+                    }
+
+                    return `<span class="math-delimited">
+                        <span class="math-delimiter">${leftSvg}</span>
+                        <span class="math-delimited-content">${renderNodesToHtml(node.children)}</span>
+                        <span class="math-delimiter">${rightSvg}</span>
+                    </span>`;
+
+                case 'LimitOperator':
+                    let opSym = node.operator;
+                    if (node.operator === '\\sum') opSym = '∑';
+                    if (node.operator === '\\prod') opSym = '∏';
+                    if (node.operator === '\\lim') opSym = 'lim';
+                    if (node.operator === '\\int') opSym = '∫';
+                    if (node.operator === '\\iint') opSym = '∫∫';
+
+                    const underHtml = node.under ? `<span class="math-lim-op-under">${renderNodesToHtml(node.under)}</span>` : '';
+                    const overHtml = node.over ? `<span class="math-lim-op-over">${renderNodesToHtml(node.over)}</span>` : '';
+                    
+                    return `<span class="math-lim-op">
+                        ${overHtml}
+                        <span class="math-lim-op-sym">${opSym}</span>
+                        ${underHtml}
+                    </span>`;
+
+                case 'Environment':
+                    if (node.name === 'matrix' || node.name === 'pmatrix' || node.name === 'bmatrix' || node.name === 'cases') {
+                        const colCount = node.rows.length > 0 ? node.rows[0].length : 1;
+                        let colTemplate = '';
+                        for (let c = 0; c < colCount; c++) colTemplate += 'auto ';
+
+                        const innerMatrix = `<span class="math-matrix" style="grid-template-columns: ${colTemplate};">
+                            ${node.rows.map(row => row.map(cell => `<span>${renderNodesToHtml(cell)}</span>`).join('')).join('')}
+                        </span>`;
+
+                        if (node.name === 'pmatrix') {
+                            return renderNodeToHtml({ type: 'Delimited', left: '(', right: ')', children: innerMatrix });
+                        }
+                        if (node.name === 'bmatrix') {
+                            return renderNodeToHtml({ type: 'Delimited', left: '[', right: ']', children: innerMatrix });
+                        }
+                        if (node.name === 'cases') {
+                            return renderNodeToHtml({ type: 'Delimited', left: '\\{', right: '.', children: innerMatrix });
+                        }
+                        return innerMatrix;
+                    }
+                    return '';
+
+                case 'Command':
+                    // Greek letters
+                    const greek = {
+                        '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\theta': 'θ',
+                        '\\delta': 'δ', '\\pi': 'π', '\\dots': '…', '\\infty': '∞',
+                        '\\approx': '≈', '\\neq': '≠', '\\ge': '≥', '\\le': '≤',
+                        '\\times': '×', '\\cdot': '·', '\\div': '÷', '\\pm': '±',
+                        '\\quad': '&emsp;', '\\qquad': '&emsp;&emsp;', '\\,': '&nbsp;',
+                        '\\in': '∈', '\\cap': '∩', '\\cup': '∪', '\\subset': '⊂',
+                        '\\mid': '∣', '\\mathbb{R}': 'ℝ', '\\mathbb{Z}': 'ℤ',
+                        '\\mathbb{N}': 'ℕ', '\\to': '→'
+                    };
+                    if (greek[node.val]) {
+                        return `<span class="math-symbol">${greek[node.val]}</span>`;
+                    }
+                    // Handle space command explicitly
+                    if (node.val === '\\ ' || node.val === '\\space') {
+                        return `<span class="math-space">&nbsp;</span>`;
+                    }
+                    return `<span class="math-symbol">${node.val}</span>`;
+
+                case 'Space':
+                    return `<span class="math-space">&nbsp;</span>`;
+
+                case 'Empty':
+                default:
+                    // Empty square placeholder box
+                    return `<span class="math-placeholder-box"></span>`;
+            }
+        }
+
+        // Wrapper function to compile raw LaTeX into styled HTML string
+        function compileLatexToHtml(latex, fontFace, size, color) {
+            try {
+                const tokens = tokenize(latex);
+                const ast = parse(tokens);
+                const mathHtml = renderNodesToHtml(ast);
+                return `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color};">
+                    ${mathHtml}
+                </div>`;
+            } catch (err) {
+                console.error("Custom parser error:", err);
+                return `<div class="text-red-500 text-xs italic">Formül parse edilemedi: ${err.message}</div>`;
+            }
+        }
+
+        // ====== LIVE PREVIEW & WORKSPACE CONTROLLER ======
+        function applyFontToMathField(fontFamilyName) {
+            if (!mf || !mf.shadowRoot) {
+                setTimeout(() => applyFontToMathField(fontFamilyName), 50);
+                return;
+            }
+            
+            let styleEl = mf.shadowRoot.getElementById('custom-font-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'custom-font-style';
+                mf.shadowRoot.appendChild(styleEl);
+            }
+            
+            if (renderMode.value === 'mathjax') {
+                styleEl.textContent = '';
+                return;
+            }
+            
+            styleEl.textContent = `
+                .ML__fieldcontainer, 
+                .ML__fieldcontainer *,
+                .ML__mathlive,
+                .ML__mathlive *,
+                .mord,
+                .mi,
+                .mn,
+                .mo,
+                .mathnormal,
+                .text {
+                    font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
+                }
+                
+                .mbin, .mrel, .mop {
+                    font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
+                }
+                
+                .ML__caret {
+                    background-color: ${currentColor} !important;
+                }
+            `;
+        }
+
+        function updatePreview() {
+            let latex = mf.getValue('latex');
+            latexInput.value = latex.replace(/\\placeholder\{.*?\}/g, '\\square');
+            
+            const mode = renderMode.value;
+            const selectedFont = fontFamily.value;
+            const sizeVal = fontSize.value;
+
+            // Apply selected styles directly to the interactive workspace math-field
+            mf.style.color = currentColor;
+            mf.style.fontSize = sizeVal + "px";
+            
+            // Update the sidebar font preview with the compiled math HTML
+            if (fontSampleText) {
+                const previewFont = (mode === 'custom') ? selectedFont : 'Times New Roman';
+                fontSampleText.innerHTML = compileLatexToHtml(latex, previewFont, 14, currentColor);
+            }
+
+            if (mode === 'custom') {
+                mf.style.fontFamily = `'${selectedFont}', sans-serif`;
+                applyFontToMathField(selectedFont);
+            } else {
+                mf.style.fontFamily = 'initial';
+                applyFontToMathField(''); // clear shadow overrides
+            }
+        }
+
+        // Double-ended synchronization (MathLive <-> Textarea)
+        mf.addEventListener('input', () => {
+            updatePreview();
+        });
+
+        latexInput.addEventListener('input', () => {
+            let latex = latexInput.value;
+            mf.setValue(latex.replace(/\\square/g, '\\placeholder{}'));
+            updatePreview();
+        });
+
+        // ====== HIGH QUALITY PNG EXPORT ======
+        document.getElementById('downloadBtn').onclick = () => {
+            const btn = document.getElementById('downloadBtn');
+            const originalText = btn.innerHTML;
+            
+            // Syntax/grouping error checks before downloading
+            let latexCodeRaw = mf.getValue('latex');
+            const leftCount = (latexCodeRaw.match(/\\left/g) || []).length;
+            const rightCount = (latexCodeRaw.match(/\\right/g) || []).length;
+            
+            if (leftCount !== rightCount) {
+                showError("Eksik veya kapatılmamış parantez (\\left ve \\right sayıları eşleşmiyor). Lütfen formülü kontrol edin.");
+                return;
+            }
+            
+            let strippedLatex = latexCodeRaw.replace(/\\{/g, "").replace(/\\}/g, "");
+            const openBraceCount = (strippedLatex.match(/\{/g) || []).length;
+            const closeBraceCount = (strippedLatex.match(/\}/g) || []).length;
+            
+            if (openBraceCount !== closeBraceCount) {
+                showError("Eksik süslü parantez '{' veya '}' sayıları eşleşmiyor. Lütfen gruplamaları kontrol edin.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                İndiriliyor...
+            `;
+            
+            const selectedFont = fontFamily.value;
+            const sizeVal = fontSize.value;
+            const mode = renderMode.value;
+            
+            const exportWrapper = document.getElementById('exportWrapper');
+            exportWrapper.innerHTML = '';
+            
+            if (currentBgColor === 'transparent') {
+                exportWrapper.style.backgroundColor = 'transparent';
+            } else {
+                exportWrapper.style.backgroundColor = currentBgColor;
+            }
+            
+            if (mode === 'custom') {
+                // Render with custom flexbox engine
+                const compiledHtml = compileLatexToHtml(latexCodeRaw, selectedFont, sizeVal * 1.5, currentColor);
+                exportWrapper.innerHTML = compiledHtml;
+                
+                // Trigger download
+                setTimeout(() => {
+                    htmlToImage.toPng(exportWrapper, {
+                        pixelRatio: 4,
+                        style: {
+                            transform: 'scale(1)',
+                            left: '0px',
+                            top: '0px'
+                        }
+                    })
+                    .then(dataUrl => {
+                        const link = document.createElement('a');
+                        link.download = `formül-${selectedFont.toLowerCase().replace(/\s+/g, '-')}.png`;
+                        link.href = dataUrl;
+                        link.click();
+                        
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        exportWrapper.innerHTML = '';
+                    })
+                    .catch(err => {
+                        console.error('PNG Render Error:', err);
+                        showError("Görsel oluşturulurken bir hata oluştu: " + err.message);
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        exportWrapper.innerHTML = '';
+                    });
+                }, 300);
+            } else {
+                // Classic MathJax Mode Download
+                let mathjaxLatex = latexCodeRaw.replace(/\\placeholder\{.*?\}/g, '\\square');
+                const mjxContainer = document.createElement('div');
+                mjxContainer.style.color = currentColor;
+                mjxContainer.style.fontSize = (sizeVal * 1.5) + "px";
+                mjxContainer.style.fontFamily = 'initial';
+                mjxContainer.style.display = 'inline-block';
+                mjxContainer.innerHTML = `$$${mathjaxLatex}$$`;
+                
+                exportWrapper.appendChild(mjxContainer);
+                
+                if (window.MathJax) {
+                    MathJax.typesetPromise([mjxContainer]).then(() => {
+                        setTimeout(() => {
+                            htmlToImage.toPng(exportWrapper, {
+                                pixelRatio: 4,
+                                style: {
+                                    transform: 'scale(1)',
+                                    left: '0px',
+                                    top: '0px'
+                                }
+                            })
+                            .then(dataUrl => {
+                                const link = document.createElement('a');
+                                link.download = 'formül-klasik-mathjax.png';
+                                link.href = dataUrl;
+                                link.click();
+                                
+                                btn.disabled = false;
+                                btn.innerHTML = originalText;
+                                exportWrapper.innerHTML = '';
+                            })
+                            .catch(err => {
+                                console.error('MathJax capture error:', err);
+                                showError("MathJax görseli oluşturulamadı: " + err.message);
+                                btn.disabled = false;
+                                btn.innerHTML = originalText;
+                                exportWrapper.innerHTML = '';
+                            });
+                        }, 400);
+                    }).catch(err => {
+                        showError("MathJax render hatası: " + err.message);
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        exportWrapper.innerHTML = '';
+                    });
+                } else {
+                    showError("MathJax kütüphanesi yüklenemedi. Sayfayı yenileyip tekrar deneyin.");
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        };
+
+        // Dark/Light Theme Switcher for Mobile UI
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.onclick = () => {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        };
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.className = savedTheme;
+
+        // Space and Keyboard Helper Bar Listeners
+        document.getElementById('addSpaceBtn').onclick = () => {
+            if (mf) {
+                mf.focus();
+                mf.executeCommand(['insert', '\\ ']); // Inserts a standard LaTeX space
+            }
+        };
+
+        document.getElementById('closeKeyboardBtn').onclick = () => {
+            if (mf) {
+                mf.blur();
+                if (window.mathVirtualKeyboard) {
+                    window.mathVirtualKeyboard.visible = false;
+                }
+            }
+        };
+
+        // Initialize editor contents on load
+        mf.value = "\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}";
+        
+        // Wait briefly for MathLive to mount and trigger initial paint
+        setTimeout(() => {
+            updatePreview();
+        }, 150);
+    </script>
+</body>
+</html>
