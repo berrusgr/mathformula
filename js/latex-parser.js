@@ -1,5 +1,12 @@
 // ====== RECURSIVE LaTeX TO CSS FLEXBOX PARSER & COMPILER ======
 
+// Helper function for fast letter checks (avoiding regex)
+function isLetter(char) {
+    if (!char) return false;
+    const code = char.charCodeAt(0);
+    return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+}
+
 // 1. Tokenizer
 function tokenize(str) {
     let i = 0;
@@ -24,13 +31,13 @@ function tokenize(str) {
                 tokens.push({ type: 'COMMAND', val: '\\' + str[j] });
                 i = j + 1;
             } else {
-                while (j < str.length && /[a-zA-Z]/.test(str[j])) {
+                while (j < str.length && isLetter(str[j])) {
                     j++;
                 }
                 tokens.push({ type: 'COMMAND', val: str.substring(i, j) });
                 i = j;
             }
-        } else if (/\s/.test(c)) {
+        } else if (c === ' ' || c === '\t' || c === '\n' || c === '\r') {
             tokens.push({ type: 'SPACE', val: ' ' });
             i++;
         } else {
@@ -286,7 +293,7 @@ function renderNodesToHtml(nodes, isNormalText = false) {
             case 'text':
                 let val = node.val;
                 if (val === ' ') return '&nbsp;';
-                if (!isNormalText && /^[a-zA-Z]$/.test(val)) {
+                if (!isNormalText && isLetter(val)) {
                     return `<span class="math-var">${val}</span>`;
                 }
                 return `<span>${val}</span>`;
@@ -497,14 +504,26 @@ function renderNodesToHtml(nodes, isNormalText = false) {
     }).join('');
 }
 
+const compileCache = new Map();
+
 function compileLatexToHtml(latex, fontFace, size, color) {
+    const cacheKey = `${latex}_${fontFace}_${size}_${color}`;
+    if (compileCache.has(cacheKey)) {
+        return compileCache.get(cacheKey);
+    }
     try {
         const tokens = tokenize(latex);
         const ast = parse(tokens);
         const mathHtml = renderNodesToHtml(ast);
-        return `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color};">
+        const result = `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color};">
             ${mathHtml}
         </div>`;
+        if (compileCache.size > 100) {
+            const firstKey = compileCache.keys().next().value;
+            compileCache.delete(firstKey);
+        }
+        compileCache.set(cacheKey, result);
+        return result;
     } catch (err) {
         console.error("Custom parser error:", err);
         return `<div class="text-red-500 text-xs italic">Formül parse edilemedi: ${err.message}</div>`;
