@@ -3,28 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matematiksel Formül Oluşturucu</title>
+    <title>Matematiksel Tasarım & Formül Editörü</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class', }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        darkbg: '#0f172a',
+                        darkcard: '#1e293b',
+                    }
+                }
+            }
+        }
     </script>
     
-    <!-- Yüksek Kaliteli PNG Çıktısı için MathJax ve html-to-image -->
+    <!-- Google Fonts for Web UI and Custom Math Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- High-quality exports and MathLive / MathJax -->
     <script>
         window.MathJax = {
-            startup: { typeset: false }, // Otomatik render'ı kapatıp kontrolü ele alıyoruz
+            startup: { typeset: false },
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
-            chtml: { scale: 1, mtextInheritFont: true }
+            chtml: { scale: 1.1, mtextInheritFont: true }
         };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
-    
-    <!-- GÖRSEL (TIKLA-YAZ) EDİTÖR İÇİN MATHLIVE -->
     <script src="https://unpkg.com/mathlive"></script>
 
     <style>
-        /* Görsel Editördeki etkileşimli kutucukların ve imlecin stili */
+        /* General styling */
+        body {
+            font-family: 'Poppins', 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Dark mode template symbols overrides */
+        .dark #templateContainer mjx-container,
+        .dark #templateContainer mjx-container * {
+            color: #f1f5f9 !important;
+            fill: #f1f5f9 !important;
+        }
+
+        /* MathLive adjustments */
         math-field {
             --contains-highlight-background: transparent;
             --caret-color: #2563eb;
@@ -34,163 +87,498 @@
             outline: none;
             width: 100%;
             text-align: center;
+            background: transparent;
         }
         math-field::part(virtual-keyboard-toggle) {
-            display: none; /* Sanal klavye butonunu gizle */
+            display: none;
+        }
+        
+        /* ====== CUSTOM CSS MATH RENDERER ENGINE STYLES ====== */
+        .math-render-root {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            line-height: 1.2;
+            user-select: none;
+        }
+        
+        /* Math variables and operators */
+        .math-var {
+            font-style: italic;
+            font-family: inherit;
+            padding: 0 0.05em;
+        }
+        .math-symbol {
+            font-family: inherit;
+            padding: 0 0.1em;
+        }
+        .math-text-cmd {
+            font-family: inherit;
+            font-style: normal;
+            font-weight: normal;
+            padding: 0 0.1em;
+        }
+        .math-operator-large {
+            font-family: inherit;
+            font-style: normal;
+            font-weight: normal;
+            display: inline-block;
+            transform: scale(1.35);
+            margin: 0 0.2em;
+        }
+        
+        /* Fractions */
+        .math-frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 0.2em;
+            line-height: 1;
+        }
+        .math-num {
+            border-bottom: 2px solid currentColor;
+            width: 100%;
+            text-align: center;
+            padding: 0 0.2em 0.08em 0.2em;
+            font-size: 0.9em;
+        }
+        .math-den {
+            width: 100%;
+            text-align: center;
+            padding: 0.08em 0.2em 0 0.2em;
+            font-size: 0.9em;
+        }
+        
+        /* Scripts (sub & sup) */
+        .math-sub-wrap, .math-sup-wrap, .math-subsup-wrap {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+        }
+        .math-base {
+            display: inline-block;
+        }
+        .math-sub {
+            font-size: 0.65em;
+            vertical-align: sub;
+            line-height: 1;
+            margin-left: 0.08em;
+            display: inline-block;
+        }
+        .math-sup {
+            font-size: 0.65em;
+            vertical-align: super;
+            line-height: 1;
+            margin-left: 0.08em;
+            display: inline-block;
+        }
+        .math-scripts {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-left: 0.08em;
+            font-size: 0.65em;
+            line-height: 1;
+        }
+        .math-scripts .math-sup {
+            margin-left: 0;
+            margin-bottom: 0.15em;
+            font-size: 1em;
+        }
+        .math-scripts .math-sub {
+            margin-left: 0;
+            margin-top: 0.15em;
+            font-size: 1em;
+        }
+        
+        /* Vertical limits operators (sums, limits) */
+        .math-limits-op-wrap {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 0.2em;
+            line-height: 0.9;
+        }
+        .math-limit-top {
+            font-size: 0.6em;
+            display: block;
+            margin-bottom: 0.1em;
+            text-align: center;
+        }
+        .math-limit-bottom {
+            font-size: 0.6em;
+            display: block;
+            margin-top: 0.15em;
+            text-align: center;
+        }
+        .math-limit-base {
+            font-size: 1.45em;
+            line-height: 0.9;
+            display: block;
+            text-align: center;
+        }
+        
+        /* Square roots */
+        .math-root {
+            display: inline-flex;
+            align-items: stretch;
+            vertical-align: middle;
+            margin: 0 0.1em;
+            position: relative;
+        }
+        .math-root-index {
+            font-size: 0.55em;
+            align-self: flex-start;
+            margin-right: -0.38em;
+            margin-top: -0.05em;
+            z-index: 2;
+            font-weight: bold;
+        }
+        .math-root-symbol-wrap {
+            display: flex;
+            align-items: center;
+            position: relative;
+            width: 0.72em;
+            margin-right: -0.05em;
+        }
+        .math-root-svg {
+            position: absolute;
+            left: 0;
+            top: 0.12em;
+            width: 100%;
+            height: calc(100% - 0.12em);
+        }
+        .math-root-content {
+            border-top: 2px solid currentColor;
+            padding-top: 0.08em;
+            padding-left: 0.15em;
+            padding-right: 0.15em;
+            margin-top: 0.12em;
+        }
+        
+        /* Brackets / Parentheses */
+        .math-bracket-wrap {
+            display: inline-flex;
+            align-items: stretch;
+            vertical-align: middle;
+            margin: 0 0.05em;
+        }
+        .math-bracket-symbol {
+            width: 0.6em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .math-bracket-content {
+            padding: 0 0.15em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Matrix */
+        .math-matrix {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 0.25em;
+        }
+        .math-matrix-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            margin: 0.12em 0;
+        }
+        .math-matrix-cell {
+            padding: 0.2em 0.45em;
+            text-align: center;
+            display: inline-block;
+            min-width: 1.6em;
+        }
+        
+        /* Decorators */
+        .math-decorator-vec {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 0.8;
+            margin: 0 0.05em;
+        }
+        .math-dec-arrow {
+            font-size: 0.58em;
+            line-height: 0.8;
+            margin-bottom: -0.1em;
+            font-weight: normal;
+        }
+        .math-decorator-hat {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 0.8;
+            margin: 0 0.05em;
+        }
+        .math-dec-hat {
+            font-size: 0.72em;
+            line-height: 0.8;
+            margin-bottom: -0.22em;
+            font-weight: normal;
+        }
+        .math-decorator-overline {
+            border-top: 1.5px solid currentColor;
+            padding-top: 0.06em;
+            display: inline-block;
+            margin: 0 0.05em;
+        }
+        .math-text-normal {
+            font-style: normal !important;
+        }
+        .math-placeholder-box {
+            display: inline-block;
+            width: 1.1em;
+            height: 1.1em;
+            border: 1px dashed currentColor;
+            opacity: 0.4;
+            border-radius: 0.15em;
+            vertical-align: middle;
+            margin: 0 0.1em;
         }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+<body class="bg-slate-50 dark:bg-darkbg text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
 
-    <div class="flex flex-col md:flex-row h-screen w-full overflow-hidden">
+    <div class="flex flex-col lg:flex-row h-screen w-full overflow-hidden">
         
-        <!-- Sol Panel: Şablonlar -->
-        <div class="w-full md:w-1/4 h-1/3 md:h-full bg-white dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 p-4 overflow-y-auto">
-            <h2 class="font-bold mb-4 text-lg">Şablonlar ve Semboller</h2>
-            <div id="templateContainer" class="space-y-4"></div>
+        <!-- Sol Panel: Şablonlar ve Semboller (Sol Sütun) -->
+        <div class="w-full lg:w-1/4 h-2/5 lg:h-full bg-white dark:bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-5 overflow-y-auto flex flex-col">
+            <div class="flex items-center gap-2 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand-600 dark:text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                <h2 class="font-bold text-lg tracking-tight">Sembol ve Şablonlar</h2>
+            </div>
+            
+            <div id="templateContainer" class="space-y-6 flex-grow"></div>
         </div>
 
-        <!-- Orta Panel: Düzenleyici -->
-        <div class="w-full md:w-2/4 h-1/3 md:h-full flex flex-col p-6 overflow-y-auto relative">
+        <!-- Orta Panel: Düzenleyici ve Canlı Önizleme -->
+        <div class="w-full lg:w-2/4 h-3/5 lg:h-full flex flex-col p-6 overflow-y-auto bg-slate-50 dark:bg-slate-950 relative border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold">Formül Düzenleyici</h1>
-                <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition shadow-sm hover:scale-105">🌙/☀️</button>
+                <div class="flex flex-col">
+                    <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">Matematiksel Editör</h1>
+                    <p class="text-xs text-slate-400 dark:text-slate-500">Formüllerinizi dilediğiniz fontla tasarlayın</p>
+                </div>
+                <button id="themeToggle" class="p-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition shadow-sm hover:scale-105" title="Karanlık/Aydınlık Mod">🌙/☀️</button>
             </div>
             
-            <!-- Kod Alanı: Her Zaman Bembeyaz (Senkronize Çalışır) -->
-            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">LaTeX Kodu (İzleme ve Düzenleme)</label>
-            <textarea id="latexInput" class="w-full h-24 p-4 border border-gray-300 rounded-lg font-mono text-base mb-4 text-black bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all" placeholder="Görsel alana tıklayıp yazın veya kod girin..."></textarea>
+            <!-- Kod Alanı -->
+            <div class="mb-4">
+                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">LaTeX Kodu (İzleme ve Manuel Giriş)</label>
+                <textarea id="latexInput" class="w-full h-20 p-3 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-sm mb-2 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all" placeholder="Görsel alana yazın veya buraya LaTeX kodu girin..."></textarea>
+            </div>
             
-            <!-- TIKLA-YAZ GÖRSEL EDİTÖR (MathLive) -->
-            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 mt-2">Görsel Editör (Tıklayıp Düzenleyin)</label>
-            <div id="previewContainer" class="flex-grow bg-white border border-gray-200 rounded-lg flex items-center justify-center p-8 shadow-inner overflow-auto min-h-[200px] cursor-text transition-colors">
-                <math-field id="mathPreview" class="text-4xl" style="color: #000000;"></math-field>
+            <!-- Görsel Tasarım & Düzenleme Alanı -->
+            <div class="flex-grow flex flex-col">
+                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Görsel Tasarım & Düzenleme Alanı (Düzenlemek İçin Tıklayın)</label>
+                <div id="designPreviewContainer" class="flex-grow bg-white border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center p-8 shadow-inner overflow-auto min-h-[220px] transition-all relative cursor-text hover:border-slate-300 dark:hover:border-slate-700">
+                    <!-- Dinamik olarak seçilen renge göre arka plan deseni/grid eklenebilir -->
+                    <div id="formulaGridBg" class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 16px 16px;"></div>
+                    
+                    <div class="z-10 w-full flex items-center justify-center transition-all duration-300">
+                        <math-field id="mathPreview" class="text-3xl w-full" style="color: #000000;"></math-field>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Sağ Panel: Ayarlar -->
-        <div class="w-full md:w-1/4 h-1/3 md:h-full bg-white dark:bg-gray-800 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700 p-6 overflow-y-auto">
-            <h2 class="font-bold mb-6 text-lg">Stil Ayarları</h2>
-            
-            <!-- Yazı Tipi -->
-            <div class="mb-6">
-                <label class="block text-sm mb-2 opacity-80">Yazı Tipi</label>
-                <select id="fontFamily" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 outline-none cursor-pointer">
-                    <option value="serif">Serif (Klasik Matematik)</option>
-                    <option value="sans-serif">Sans-Serif (Düz/Modern)</option>
-                </select>
-                <p class="text-[10px] opacity-60 mt-1 italic">* Yazı tipi değişimi indirilen PNG'de görünür.</p>
-            </div>
-
-            <!-- Yazı Boyutu -->
-            <div class="mb-6">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-sm opacity-80">Yazı Boyutu</label>
-                    <span id="fontSizeLabel" class="text-sm font-mono font-bold text-blue-600">(24px)</span>
+        <!-- Sağ Panel: Stil Ayarları ve İndirme Butonu -->
+        <div class="w-full lg:w-1/4 h-auto lg:h-full bg-white dark:bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 p-6 overflow-y-auto flex flex-col justify-between">
+            <div class="space-y-6">
+                <div>
+                    <h2 class="font-bold text-lg tracking-tight mb-1 text-slate-900 dark:text-white">Tasarım Ayarları</h2>
+                    <p class="text-xs text-slate-400 dark:text-slate-500">Formülün görsel stilini özelleştirin</p>
                 </div>
-                <input type="range" id="fontSize" min="10" max="100" value="24" class="w-full accent-blue-600 cursor-pointer">
-            </div>
-            
-            <!-- Yazı Rengi Seçici (Pop-up Mantığı) -->
-            <div class="mb-8 relative">
-                <div class="flex items-center gap-3 mb-2">
-                    <label class="block text-sm opacity-80">Yazı Rengi</label>
-                    <div id="colorDisplay" class="w-8 h-8 rounded border-2 border-gray-300 cursor-pointer shadow-sm hover:scale-105 transition-transform" style="background-color: #000000;"></div>
+                
+                <hr class="border-slate-100 dark:border-slate-800">
+                
+                <!-- Render Modu Seçimi -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Çizim Motoru (Render Engine)</label>
+                    <select id="renderMode" class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition">
+                        <option value="custom" selected>Özel Tasarım Modu (Özel Yazı Tipleri)</option>
+                        <option value="mathjax">Klasik Matematik (MathJax TeX)</option>
+                    </select>
                 </div>
 
-                <!-- Renk Paleti Pop-up -->
-                <div id="colorPopup" class="hidden absolute top-10 right-0 md:left-0 w-64 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 z-50">
-                    <div id="colorGrid" class="grid grid-cols-5 gap-2 mb-4"></div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold opacity-60">HEX:</span>
-                        <input type="text" id="hexInput" value="#000000" class="w-full p-1.5 border border-gray-300 dark:border-gray-600 rounded text-center font-mono text-sm bg-gray-50 dark:bg-gray-700 outline-none uppercase">
+                <!-- Yazı Tipi Seçimi -->
+                <div id="fontSelectWrapper">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Yazı Tipi (Font Family)</label>
+                    <select id="fontFamily" class="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition">
+                        <option value="Poppins" selected>Poppins (Modern Sans-serif)</option>
+                        <option value="Inter">Inter (Temiz Sans-serif)</option>
+                        <option value="Montserrat">Montserrat (Geometrik)</option>
+                        <option value="Playfair Display">Playfair Display (Zarif Serif)</option>
+                        <option value="Arial">Arial (Sistem Sans-serif)</option>
+                        <option value="Times New Roman">Times New Roman (Klasik Serif)</option>
+                    </select>
+                    <!-- Font sample preview -->
+                    <div id="fontSamplePreview" class="mt-2.5 p-3 border border-slate-200 dark:border-slate-800 rounded-xl select-none text-[11px] font-medium text-slate-500 dark:text-slate-400 transition-all duration-300 flex flex-col items-center bg-white" style="background-color: #ffffff;">
+                        <span class="mb-1.5 text-[9px] uppercase tracking-wider opacity-60">PNG Çıktı Görünümü (Sidebar Önizleme):</span>
+                        <div class="w-full overflow-x-auto flex justify-center py-1" id="fontSampleText"></div>
+                    </div>
+                </div>
+
+                <!-- Yazı Boyutu -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Yazı Boyutu</label>
+                        <span id="fontSizeLabel" class="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">(24px)</span>
+                    </div>
+                    <input type="range" id="fontSize" min="16" max="120" value="24" class="w-full accent-blue-600 cursor-pointer">
+                </div>
+                
+                <!-- Yazı Rengi -->
+                <div class="relative">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Yazı Rengi</label>
+                        <div class="flex items-center gap-2">
+                            <div id="colorDisplay" class="w-7 h-7 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer shadow-sm hover:scale-110 transition-transform" style="background-color: #000000;"></div>
+                            <span id="colorHexText" class="text-xs font-mono font-semibold opacity-60">#000000</span>
+                        </div>
+                    </div>
+
+                    <!-- Renk Paleti Pop-up -->
+                    <div id="colorPopup" class="hidden absolute right-0 top-8 w-60 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50">
+                        <div id="colorGrid" class="grid grid-cols-5 gap-2 mb-3"></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold opacity-60">HEX:</span>
+                            <input type="text" id="hexInput" value="#000000" class="w-full p-1 border border-slate-200 dark:border-slate-700 rounded text-center font-mono text-xs bg-slate-50 dark:bg-slate-900 outline-none uppercase text-slate-800 dark:text-slate-100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arka Plan Rengi Seçimi -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">PNG Arka Planı (Background)</label>
+                    <div class="grid grid-cols-2 gap-2" id="bgOptionGrid">
+                        <button data-bg="transparent" class="bg-transparent border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 transition active-bg-btn" style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;">Şeffaf</button>
+                        <button data-bg="#ffffff" class="bg-white border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center text-slate-900 shadow-sm transition">Beyaz</button>
                     </div>
                 </div>
             </div>
 
-            <button id="downloadBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-bold shadow-md flex justify-center items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                PNG Olarak İndir
-            </button>
+            <!-- İndirme Butonu (Makul Boyutta Ortalanmış) -->
+            <div class="mt-6 lg:mt-0 pt-4 flex justify-center">
+                <button id="downloadBtn" class="w-full max-w-[200px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-750 text-white py-2.5 rounded-xl hover:shadow-md hover:shadow-blue-500/10 active:scale-[0.98] transition-all font-medium text-xs flex justify-center items-center gap-1.5 shadow">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    PNG Olarak İndir
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Hata Modalı (Eksik Parantez / Syntax Hataları İçin) -->
-    <div id="errorModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-red-100 dark:border-red-900/50">
+    <!-- Hata Bildirim Modalı -->
+    <div id="errorModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-red-100 dark:border-red-950">
             <div class="flex items-center gap-4 mb-4">
                 <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
                     <span class="text-2xl">⚠️</span>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">İndirme İptal Edildi</h3>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Formül Hatası</h3>
             </div>
-            <p id="errorModalMessage" class="text-gray-600 dark:text-gray-300 mb-6 text-sm"></p>
-            <button onclick="document.getElementById('errorModal').classList.add('hidden')" class="w-full bg-gray-900 dark:bg-gray-600 text-white font-bold py-2.5 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-500 transition">Anladım</button>
+            <p id="errorModalMessage" class="text-slate-600 dark:text-slate-300 mb-6 text-sm leading-relaxed"></p>
+            <button onclick="document.getElementById('errorModal').classList.add('hidden')" class="w-full bg-slate-900 dark:bg-slate-700 text-white font-bold py-2.5 rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 transition shadow">Tamam</button>
         </div>
     </div>
 
+    <!-- Developer Credit Signature -->
+    <a href="https://instagram.com/berrusagir" target="_blank" rel="noopener noreferrer" class="fixed bottom-2 left-3 text-[10px] text-slate-400 dark:text-slate-600 hover:text-brand-500 font-medium z-50 tracking-wider transition-colors cursor-pointer">
+        Berru Sağır
+    </a>
+
     <script>
-        // İstenilen tam sembol listesi
+        // LaTeX Categories & Templates
         const categories = {
             "TEMEL ŞABLONLAR": [
                 "\\frac{\\square}{\\square}", "{\\square}^{2}", "{\\square}^{3}", "{\\square}^{\\square}", 
-                "\\sqrt{\\square}", "\\sqrt[3]{\\square}", "\\sqrt[\\square]{\\square}", "|\\square|", 
+                "\\sqrt{\\square}", "\\sqrt[\\square]{\\square}", "|\\square|", 
                 "\\left( \\square \\right)", "\\left[ \\square \\right]", "\\left\\{ \\square \\right\\}", 
                 "{\\square}_{\\square}", "\\int \\square dx", "\\sum \\square", "\\prod \\square", 
                 "\\lim_{\\square \\to \\square} \\square", "\\log_{\\square} \\square", 
-                "\\overrightarrow{\\square}", "\\overline{\\square}", "\\overleftrightarrow{\\square}", 
-                "\\vec{\\square}", "\\overset{\\frown}{\\square}"
+                "\\overrightarrow{\\square}", "\\overline{\\square}", "\\vec{\\square}", "\\text{\\square}"
             ],
-            "ARİTMETİK & CEBİR": ["+", "-", "\\times", ".", "\\div", ":", "=", "\\neq", "<", ">", "\\leq", "\\geq", "\\approx", "\\cong", "\\equiv", "\\propto", "\\pm", "\\infty", "\\%", "!", "n!"],
+            "ARİTMETİK & CEBİR": ["+", "-", "\\times", ".", "\\div", ":", "=", "\\neq", "<", ">", "\\leq", "\\geq", "\\approx", "\\cong", "\\equiv", "\\propto", "\\pm", "\\infty", "\\%", "!"],
             "TRİGONOMETRİ & FONKSİYONLAR": ["\\sin", "\\cos", "\\tan", "\\cot", "\\sec", "\\csc", "\\arcsin", "\\arccos", "\\arctan", "\\log", "\\ln", "\\exp"],
             "ANALİZ & CALCULUS": ["\\int", "\\iint", "\\iiint", "\\oint", "\\sum", "\\prod", "\\lim", "\\sup", "\\inf", "\\frac{d}{dx}", "\\partial", "\\nabla"],
-            "KÜMELER & MANTIK": ["\\in", "\\notin", "\\subset", "\\subseteq", "\\not\\subset", "\\supset", "\\supseteq", "\\cup", "\\cap", "\\setminus", "\\emptyset", "\\forall", "\\exists", "\\neg", "\\wedge", "\\vee", "\\Rightarrow", "\\Leftrightarrow"],
-            "GEOMETRİ & VEKTÖRLER": ["^\\circ", "\\angle", "\\perp", "\\parallel", "\\triangle", "\\rightarrow", "\\vec{v}", "\\overrightarrow{AB}", "\\overline{AB}", "\\overleftrightarrow{AB}", "\\overset{\\frown}{AB}", "\\sim"],
+            "KÜMELER & MANTIK": ["\\in", "\\notin", "\\subset", "\\subseteq", "\\supset", "\\supseteq", "\\cup", "\\cap", "\\setminus", "\\emptyset", "\\forall", "\\exists", "\\neg", "\\wedge", "\\vee", "\\Rightarrow", "\\Leftrightarrow"],
+            "GEOMETRİ & VEKTÖRLER": ["^\\circ", "\\angle", "\\perp", "\\parallel", "\\triangle", "\\rightarrow", "\\vec{v}", "\\overrightarrow{AB}", "\\overline{AB}", "\\sim"],
             "YUNAN ALFABESİ": ["\\alpha", "\\beta", "\\gamma", "\\delta", "\\pi", "\\sigma", "\\theta", "\\lambda", "\\phi", "\\omega", "\\Delta", "\\Omega"]
         };
 
         const standardColors = [
-            "#000000", "#333333", "#666666", "#999999", "#CCCCCC",
-            "#FF0000", "#FF4500", "#FF8C00", "#FFD700", "#ADFF2F",
-            "#008000", "#008B8B", "#00CED1", "#1E90FF", "#0000CD",
-            "#4B0082", "#8A2BE2", "#FF1493", "#FF69B4", "#8B4513",
-            "#FFFFFF", "#F5F5F5", "#FFE4E1", "#E6E6FA", "#F0FFFF"
+            "#2563eb", "#3b82f6", "#10b981", "#14b8a6", "#f59e0b",
+            "#ef4444", "#ec4899", "#8b5cf6", "#6366f1", "#0f172a",
+            "#ffffff", "#f3f4f6", "#cbd5e1", "#64748b", "#334155",
+            "#e11d48", "#d97706", "#059669", "#0891b2", "#4f46e5"
         ];
 
         let currentColor = "#000000";
+        let currentBgColor = "#ffffff"; // Default background white
+        
+        // Element references
         const mf = document.getElementById('mathPreview');
         const latexInput = document.getElementById('latexInput');
         const templateContainer = document.getElementById('templateContainer');
+        const renderMode = document.getElementById('renderMode');
+        const fontFamily = document.getElementById('fontFamily');
+        const fontSamplePreview = document.getElementById('fontSamplePreview');
+        const fontSampleText = document.getElementById('fontSampleText');
+        const fontSelectWrapper = document.getElementById('fontSelectWrapper');
+        const fontSize = document.getElementById('fontSize');
+        const fontSizeLabel = document.getElementById('fontSizeLabel');
+        const colorDisplay = document.getElementById('colorDisplay');
+        const colorHexText = document.getElementById('colorHexText');
+        const colorPopup = document.getElementById('colorPopup');
+        const colorGrid = document.getElementById('colorGrid');
+        const hexInput = document.getElementById('hexInput');
+        const designPreviewContainer = document.getElementById('designPreviewContainer');
+        const bgOptionGrid = document.getElementById('bgOptionGrid');
 
-        // Hata Mesajı Gösterme Fonksiyonu
+        // Initial setup for color display
+        colorDisplay.style.backgroundColor = currentColor;
+        colorHexText.innerText = currentColor.toUpperCase();
+
+        // Modal error handler
         function showError(msg) {
             document.getElementById('errorModalMessage').innerText = msg;
             document.getElementById('errorModal').classList.remove('hidden');
         }
 
-        // Şablonları Yükleme ve MathJax ile Görüntüleme
+        // Fill templates & render them in sidebar using MathJax
         Object.keys(categories).forEach(cat => {
             const div = document.createElement('div');
-            div.innerHTML = `<h3 class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">${cat}</h3>`;
+            div.innerHTML = `<h3 class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">${cat}</h3>`;
             const grid = document.createElement('div');
-            grid.className = "grid grid-cols-5 gap-1";
+            grid.className = "grid grid-cols-5 gap-1.5";
             categories[cat].forEach(tex => {
                 const btn = document.createElement('button');
                 
-                // Uzun şablonlar için butonu genişletme (col-span-2)
                 let extraClass = "";
-                if (tex.includes("\\lim") || tex.includes("\\log") || tex.includes("\\int \\square dx") || tex.includes("\\overleftrightarrow") || tex.includes("\\overrightarrow")) {
+                if (tex.includes("\\lim") || tex.includes("\\log") || tex.includes("\\int") || tex.includes("\\overrightarrow") || tex.includes("\\text")) {
                     extraClass = " col-span-2";
                 }
                 
-                btn.className = "bg-gray-100 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 p-1.5 rounded text-[11px] text-center border border-gray-200 dark:border-gray-600 transition flex items-center justify-center" + extraClass;
+                btn.className = "bg-slate-50 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700/80 p-2 rounded-lg text-xs text-center border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center justify-center shadow-xs" + extraClass;
                 btn.innerHTML = `\\(${tex}\\)`;
                 
-                // Tıklandığında \square yerine \placeholder{} koyarak görsel editöre ekle
                 btn.onclick = () => { 
                     const interactiveTex = tex.replace(/\\square/g, '\\placeholder{}');
                     mf.executeCommand(['insert', interactiveTex]);
-                    mf.focus(); // Tıkladıktan sonra doğrudan yazmaya hazır olsun
+                    mf.focus();
                 };
                 grid.appendChild(btn);
             });
@@ -198,28 +586,27 @@
             templateContainer.appendChild(div);
         });
 
-        // Sayfa yüklendiğinde butonların içindeki şablonları render et
+        // Initialize template MathJax styling
         window.addEventListener('load', () => {
             setTimeout(() => {
                 if (window.MathJax) {
                     MathJax.typesetPromise([templateContainer]);
                 }
+                // Render formula preview on load
+                updatePreview();
             }, 500);
         });
 
-        // Tema Yönetimi
+        // Theme management
         const themeToggle = document.getElementById('themeToggle');
-        themeToggle.onclick = () => document.documentElement.classList.toggle('dark');
+        themeToggle.onclick = () => {
+            document.documentElement.classList.toggle('dark');
+        };
 
-        // Renk Paleti Yönetimi
-        const colorDisplay = document.getElementById('colorDisplay');
-        const colorPopup = document.getElementById('colorPopup');
-        const colorGrid = document.getElementById('colorGrid');
-        const hexInput = document.getElementById('hexInput');
-
+        // Color Picker implementation
         standardColors.forEach(color => {
             const btn = document.createElement('div');
-            btn.className = "w-8 h-8 rounded border border-gray-300 cursor-pointer hover:scale-110 transition-transform shadow-sm";
+            btn.className = "w-7 h-7 rounded-md border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-110 transition shadow-xs";
             btn.style.backgroundColor = color;
             btn.onclick = (e) => { 
                 e.stopPropagation(); 
@@ -231,9 +618,10 @@
         function applyColor(hex) {
             currentColor = hex;
             colorDisplay.style.backgroundColor = hex;
+            colorHexText.innerText = hex.toUpperCase();
             hexInput.value = hex.toUpperCase();
-            mf.style.color = hex;
             colorPopup.classList.add('hidden');
+            updatePreview();
         }
 
         colorDisplay.onclick = (e) => {
@@ -241,55 +629,680 @@
             colorPopup.classList.toggle('hidden');
         };
 
-        // Boşluğa tıklayınca pop-up'ı kapat
         document.addEventListener('click', (e) => {
             if (!colorPopup.contains(e.target) && e.target !== colorDisplay) {
                 colorPopup.classList.add('hidden');
             }
         });
 
-        // Hex girişi ile renk değiştirme
         hexInput.onchange = (e) => {
             let val = e.target.value.trim();
             if(!val.startsWith('#')) val = '#' + val;
             if(/^#[0-9A-F]{6}$/i.test(val)) applyColor(val);
         };
 
-        // ====== ÇİFT YÖNLÜ SENKRONİZASYON (Görsel Editör <-> Kod Alanı) ======
-        
-        // 1. Görsel editörde tıkla-yaz yaparken kod alanını güncelle
-        mf.addEventListener('input', () => {
-            let latex = mf.getValue('latex');
-            // Kullanıcı \placeholder kutularını dolduruyorsa, kodda \square olarak temizleyelim
-            latexInput.value = latex.replace(/\\placeholder\{.*?\}/g, '\\square');
+        // Background PNG Selection
+        bgOptionGrid.querySelectorAll('button').forEach(btn => {
+            btn.onclick = () => {
+                bgOptionGrid.querySelectorAll('button').forEach(b => {
+                    b.classList.remove('border-2', 'border-blue-500', 'shadow-sm');
+                    b.classList.add('border', 'border-slate-200', 'dark:border-slate-700');
+                });
+                btn.classList.add('border-2', 'border-blue-500', 'shadow-sm');
+                btn.classList.remove('border', 'border-slate-200', 'dark:border-slate-700');
+                
+                currentBgColor = btn.getAttribute('data-bg');
+                
+                // Style the design preview container dynamically
+                if (currentBgColor === 'transparent') {
+                    designPreviewContainer.style.backgroundColor = '';
+                    designPreviewContainer.style.backgroundImage = 'linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%)';
+                    designPreviewContainer.style.backgroundSize = '20px 20px';
+                    designPreviewContainer.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
+                    
+                    // Style the sidebar preview to match the chess transparent grid
+                    fontSamplePreview.style.backgroundColor = '';
+                    fontSamplePreview.style.backgroundImage = 'linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%)';
+                    fontSamplePreview.style.backgroundSize = '12px 12px';
+                    fontSamplePreview.style.backgroundPosition = '0 0, 0 6px, 6px -6px, -6px 0px';
+                } else {
+                    designPreviewContainer.style.backgroundImage = 'none';
+                    designPreviewContainer.style.backgroundColor = currentBgColor;
+                    
+                    // Style the sidebar preview to match the selected color background
+                    fontSamplePreview.style.backgroundImage = 'none';
+                    fontSamplePreview.style.backgroundColor = currentBgColor;
+                }
+                updatePreview();
+            };
         });
 
-        // 2. Kullanıcı inatla kod alanından yazıyorsa görsel editörü güncelle
-        latexInput.addEventListener('input', () => {
-            let latex = latexInput.value;
-            // Kod alanındaki \square ları tekrar etkileşimli kutulara çevir
-            mf.setValue(latex.replace(/\\square/g, '\\placeholder{}'));
-        });
+        // Initialize design container preview back to white (both main and sidebar previews)
+        designPreviewContainer.style.backgroundColor = '#ffffff';
+        fontSamplePreview.style.backgroundColor = '#ffffff';
 
-        // Yazı Boyutu Değişimi
-        document.getElementById('fontSize').oninput = (e) => {
-            const size = e.target.value;
-            document.getElementById('fontSizeLabel').innerText = `(${size}px)`;
-            mf.style.fontSize = size + "px";
+        // Toggling render engine
+        renderMode.onchange = () => {
+            if (renderMode.value === 'mathjax') {
+                fontSelectWrapper.style.opacity = '0.5';
+                fontFamily.disabled = true;
+            } else {
+                fontSelectWrapper.style.opacity = '1';
+                fontFamily.disabled = false;
+            }
+            updatePreview();
         };
 
-        // ====== YÜKSEK KALİTELİ PNG İNDİRME (GÜNCELLENMİŞ VE KARARLI YAPI) ======
+        fontFamily.onchange = () => updatePreview();
+        fontSize.oninput = (e) => {
+            fontSizeLabel.innerText = `(${e.target.value}px)`;
+            updatePreview();
+        };
+
+        // ====== RECURSIVE LaTeX TO CSS FLEXBOX PARSER & COMPILER ======
+        
+        // 1. Tokenizer
+        function tokenize(str) {
+            let i = 0;
+            const tokens = [];
+            while (i < str.length) {
+                const c = str[i];
+                if (c === '{') {
+                    tokens.push({ type: 'OPEN', val: '{' });
+                    i++;
+                } else if (c === '}') {
+                    tokens.push({ type: 'CLOSE', val: '}' });
+                    i++;
+                } else if (c === '_') {
+                    tokens.push({ type: 'SUB', val: '_' });
+                    i++;
+                } else if (c === '^') {
+                    tokens.push({ type: 'SUP', val: '^' });
+                    i++;
+                } else if (c === '\\') {
+                    let j = i + 1;
+                    if (j < str.length && (str[j] === '(' || str[j] === ')' || str[j] === '[' || str[j] === ']' || str[j] === '{' || str[j] === '}' || str[j] === ',' || str[j] === ';' || str[j] === '!' || str[j] === '\\' || str[j] === '|' || str[j] === ' ')) {
+                        tokens.push({ type: 'COMMAND', val: '\\' + str[j] });
+                        i = j + 1;
+                    } else {
+                        while (j < str.length && /[a-zA-Z]/.test(str[j])) {
+                            j++;
+                        }
+                        tokens.push({ type: 'COMMAND', val: str.substring(i, j) });
+                        i = j;
+                    }
+                } else if (/\s/.test(c)) {
+                    tokens.push({ type: 'SPACE', val: ' ' });
+                    i++;
+                } else {
+                    tokens.push({ type: 'CHAR', val: c });
+                    i++;
+                }
+            }
+            return tokens;
+        }
+
+        // 2. Parser (Recursive descent)
+        function parse(tokens) {
+            let index = 0;
+
+            function peek() {
+                return tokens[index];
+            }
+
+            function next() {
+                return tokens[index++];
+            }
+
+            function parseExpression() {
+                const nodes = [];
+                while (index < tokens.length) {
+                    const tok = peek();
+                    if (!tok) break;
+                    if (tok.type === 'CLOSE') {
+                        break;
+                    }
+                    nodes.push(parseNode());
+                }
+                return nodes;
+            }
+
+            function parseGroup() {
+                next(); // consume OPEN {
+                const content = parseExpression();
+                if (peek() && peek().type === 'CLOSE') {
+                    next(); // consume CLOSE }
+                }
+                return content;
+            }
+
+            function parseArgument() {
+                const tok = peek();
+                if (!tok) return [];
+                if (tok.type === 'OPEN') {
+                    return parseGroup();
+                }
+                return [parseNode()];
+            }
+
+            function parseNode() {
+                const tok = next();
+                if (!tok) return { type: 'text', val: '' };
+                
+                if (tok.type === 'OPEN') {
+                    const content = parseExpression();
+                    if (peek() && peek().type === 'CLOSE') {
+                        next();
+                    }
+                    return checkSubSup({ type: 'group', content });
+                }
+
+                if (tok.type === 'COMMAND') {
+                    if (tok.val === '\\frac') {
+                        const num = parseArgument();
+                        const den = parseArgument();
+                        return checkSubSup({ type: 'frac', num, den });
+                    } else if (tok.val === '\\sqrt') {
+                        let rootIndex = null;
+                        if (peek() && peek().type === 'CHAR' && peek().val === '[') {
+                            next(); // consume '['
+                            rootIndex = [];
+                            while (index < tokens.length && !(peek().type === 'CHAR' && peek().val === ']')) {
+                                rootIndex.push(parseNode());
+                            }
+                            if (peek() && peek().val === ']') {
+                                next(); // consume ']'
+                            }
+                        }
+                        const content = parseArgument();
+                        return checkSubSup({ type: 'root', index: rootIndex, content });
+                    } else if (tok.val === '\\left') {
+                        const leftBracket = next();
+                        const content = [];
+                        while (index < tokens.length) {
+                            const t = peek();
+                            if (t && t.type === 'COMMAND' && t.val === '\\right') {
+                                next(); // consume \right
+                                break;
+                            }
+                            content.push(parseNode());
+                        }
+                        const rightBracket = next();
+                        return checkSubSup({ type: 'bracket', left: leftBracket, right: rightBracket, content });
+                    } else if (tok.val === '\\begin') {
+                        const envTok = parseArgument();
+                        const envName = envTok.map(n => n.val || '').join('');
+                        
+                        const contentTokens = [];
+                        let depth = 1;
+                        while (index < tokens.length) {
+                            const t = peek();
+                            if (t && t.type === 'COMMAND' && t.val === '\\begin') {
+                                contentTokens.push(next());
+                                depth++;
+                            } else if (t && t.type === 'COMMAND' && t.val === '\\end') {
+                                const lookaheadIndex = index;
+                                index++; // consume \end
+                                const endEnv = parseArgument();
+                                const endEnvName = endEnv.map(n => n.val || '').join('');
+                                if (endEnvName === envName) {
+                                    depth--;
+                                    if (depth === 0) {
+                                        break;
+                                    }
+                                }
+                                contentTokens.push(t);
+                                contentTokens.push(...tokens.slice(lookaheadIndex + 1, index));
+                            } else {
+                                contentTokens.push(next());
+                            }
+                        }
+                        
+                        // Split content by rows (\\\\) and columns (&)
+                        const rows = [];
+                        let currentRow = [];
+                        let currentCellTokens = [];
+                        
+                        for (let t of contentTokens) {
+                            if (t.type === 'COMMAND' && t.val === '\\\\') {
+                                currentRow.push(parse(currentCellTokens));
+                                rows.push(currentRow);
+                                currentRow = [];
+                                currentCellTokens = [];
+                            } else if (t.type === 'CHAR' && t.val === '&') {
+                                currentRow.push(parse(currentCellTokens));
+                                currentCellTokens = [];
+                            } else {
+                                currentCellTokens.push(t);
+                            }
+                        }
+                        if (currentCellTokens.length > 0 || currentRow.length > 0) {
+                            currentRow.push(parse(currentCellTokens));
+                            rows.push(currentRow);
+                        }
+                        
+                        return checkSubSup({ type: 'matrix', env: envName, rows });
+                    } else if (tok.val === '\\vec') {
+                        const content = parseArgument();
+                        return checkSubSup({ type: 'decorator', dec: 'vec', content });
+                    } else if (tok.val === '\\overline') {
+                        const content = parseArgument();
+                        return checkSubSup({ type: 'decorator', dec: 'overline', content });
+                    } else if (tok.val === '\\overrightarrow') {
+                        const content = parseArgument();
+                        return checkSubSup({ type: 'decorator', dec: 'vector-arrow', content });
+                    } else if (tok.val === '\\hat') {
+                        const content = parseArgument();
+                        return checkSubSup({ type: 'decorator', dec: 'hat', content });
+                    } else if (tok.val === '\\text') {
+                        const content = parseArgument();
+                        return checkSubSup({ type: 'text-group', content });
+                    } else {
+                        return checkSubSup({ type: 'command', val: tok.val });
+                    }
+                }
+
+                if (tok.type === 'SUB' || tok.type === 'SUP') {
+                    const arg = parseArgument();
+                    return { type: tok.type === 'SUB' ? 'sub' : 'sup', base: [{ type: 'text', val: '' }], val: arg };
+                }
+
+                return checkSubSup({ type: 'text', val: tok.val });
+            }
+
+            function checkSubSup(node) {
+                let sub = null;
+                let sup = null;
+                
+                while (index < tokens.length) {
+                    const nextTok = peek();
+                    if (nextTok && nextTok.type === 'SUB') {
+                        next();
+                        sub = parseArgument();
+                    } else if (nextTok && nextTok.type === 'SUP') {
+                        next();
+                        sup = parseArgument();
+                    } else {
+                        break;
+                    }
+                }
+                
+                if (sub && sup) {
+                    return { type: 'subsup', base: [node], sub, sup };
+                } else if (sub) {
+                    return { type: 'sub', base: [node], sub };
+                } else if (sup) {
+                    return { type: 'sup', base: [node], sup };
+                }
+                return node;
+            }
+
+            return parseExpression();
+        }
+
+        // 3. Render Nodes to HTML
+        const COMMAND_MAPPING = {
+            '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\pi': 'π', '\\sigma': 'σ', 
+            '\\theta': 'θ', '\\lambda': 'λ', '\\phi': 'φ', '\\omega': 'ω', '\\Delta': 'Δ', '\\Omega': 'Ω',
+            '\\epsilon': 'ε', '\\eta': 'η', '\\iota': 'ι', '\\kappa': 'κ', '\\mu': 'μ', '\\nu': 'ν', 
+            '\\xi': 'ξ', '\\rho': 'ρ', '\\tau': 'τ', '\\upsilon': 'υ', '\\chi': 'χ', '\\psi': 'ψ',
+            '\\Gamma': 'Γ', '\\Theta': 'Θ', '\\Lambda': 'Λ', '\\Xi': 'Ξ', '\\Pi': 'Π', '\\Sigma': 'Σ', 
+            '\\Upsilon': 'Υ', '\\Phi': 'Φ', '\\Psi': 'Ψ',
+            
+            '\\times': '×', '\\div': '÷', '\\pm': '±', '\\infty': '∞', '\\approx': '≈', '\\neq': '≠',
+            '\\leq': '≤', '\\geq': '≥', '\\cong': '≅', '\\equiv': '≡', '\\propto': '∝',
+            '\\cdot': '·', '\\cdotp': '·', '\\ldots': '…', '\\cdots': '⋯', '\\ddots': '⋱', '\\vdots': '⋮',
+            
+            '\\in': '∈', '\\notin': '∉', '\\subset': '⊂', '\\subseteq': '⊆', '\\supset': '⊃', '\\supseteq': '⊇',
+            '\\cup': '∪', '\\cap': '∩', '\\setminus': '∖', '\\emptyset': '∅',
+            '\\forall': '∀', '\\exists': '∃', '\\neg': '¬', '\\wedge': '∧', '\\vee': '∨',
+            '\\Rightarrow': '⇒', '\\Leftrightarrow': '⇔', '\\to': '→', '\\gets': '←', '\\rightarrow': '→', '\\leftarrow': '←',
+            
+            '\\partial': '∂', '\\nabla': '∇', '\\angle': '∠', '\\perp': '⊥', '\\parallel': '∥', 
+            '\\triangle': '△', '\\sim': '∼',
+            
+            '\\quad': '<span style="margin-right: 0.8em; display: inline-block;"></span>',
+            '\\qquad': '<span style="margin-right: 1.6em; display: inline-block;"></span>',
+            '\\,': '<span style="margin-right: 0.15em; display: inline-block;"></span>',
+            '\\:': '<span style="margin-right: 0.22em; display: inline-block;"></span>',
+            '\\;': '<span style="margin-right: 0.27em; display: inline-block;"></span>',
+            '\\ ': '<span style="margin-right: 0.25em; display: inline-block;"></span>',
+            '\\\\': '<br/>',
+            
+            '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan', '\\cot': 'cot', '\\sec': 'sec', '\\csc': 'csc',
+            '\\arcsin': 'arcsin', '\\arccos': 'arccos', '\\arctan': 'arctan', '\\log': 'log', '\\ln': 'ln', '\\exp': 'exp',
+        };
+
+        function isLimitOperator(baseNodes) {
+            if (baseNodes.length === 1 && baseNodes[0].type === 'command') {
+                const val = baseNodes[0].val;
+                return val === '\\sum' || val === '\\prod' || val === '\\lim';
+            }
+            return false;
+        }
+
+        function renderNodesToHtml(nodes, isNormalText = false) {
+            return nodes.map(node => {
+                switch (node.type) {
+                    case 'text':
+                        let val = node.val;
+                        if (val === ' ') return '&nbsp;';
+                        if (!isNormalText && /^[a-zA-Z]$/.test(val)) {
+                            return `<span class="math-var">${val}</span>`;
+                        }
+                        return `<span>${val}</span>`;
+
+                    case 'command':
+                        if (node.val === '\\placeholder') {
+                            return `<span class="math-placeholder-box"></span>`;
+                        }
+                        const cmdVal = COMMAND_MAPPING[node.val] || node.val.replace(/^\\/, '');
+                        if (node.val === '\\int') {
+                            return `<span class="math-operator-large math-integral">∫</span>`;
+                        }
+                        if (node.val === '\\sum') {
+                            return `<span class="math-operator-large math-sum">∑</span>`;
+                        }
+                        if (node.val === '\\prod') {
+                            return `<span class="math-operator-large math-prod">∏</span>`;
+                        }
+                        if (node.val === '\\lim') {
+                            return `<span class="math-operator-large math-lim">lim</span>`;
+                        }
+                        
+                        if (COMMAND_MAPPING[node.val]) {
+                            if (node.val.startsWith('\\quad') || node.val.startsWith('\\\\') || node.val.startsWith('\\ ')) {
+                                return cmdVal; // raw HTML spacer output
+                            }
+                            if (!/^[a-zA-Z]{3,}/.test(COMMAND_MAPPING[node.val])) {
+                                return `<span class="math-symbol">${cmdVal}</span>`;
+                            }
+                        }
+                        return `<span class="math-text-cmd">${cmdVal}</span>`;
+
+                    case 'group':
+                        return `<span class="math-group">${renderNodesToHtml(node.content, isNormalText)}</span>`;
+
+                    case 'text-group':
+                        return `<span class="math-text-normal">${renderNodesToHtml(node.content, true)}</span>`;
+
+                    case 'frac':
+                        return `<div class="math-frac">
+                            <div class="math-num">${renderNodesToHtml(node.num, isNormalText)}</div>
+                            <div class="math-den">${renderNodesToHtml(node.den, isNormalText)}</div>
+                        </div>`;
+
+                    case 'sub':
+                        if (isLimitOperator(node.base)) {
+                            return `<div class="math-limits-op-wrap">
+                                <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                                <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                            </div>`;
+                        }
+                        return `<span class="math-sub-wrap">
+                            <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                            <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                        </span>`;
+
+                    case 'sup':
+                        if (isLimitOperator(node.base)) {
+                            return `<div class="math-limits-op-wrap">
+                                <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                                <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                            </div>`;
+                        }
+                        return `<span class="math-sup-wrap">
+                            <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                            <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                        </span>`;
+
+                    case 'subsup':
+                        if (isLimitOperator(node.base)) {
+                            return `<div class="math-limits-op-wrap">
+                                <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                                <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                                <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                            </div>`;
+                        }
+                        return `<span class="math-subsup-wrap">
+                            <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                            <span class="math-scripts">
+                                <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                                <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                            </span>
+                        </span>`;
+
+                    case 'root':
+                        const rootContentHtml = renderNodesToHtml(node.content, isNormalText);
+                        if (node.index && node.index.length > 0) {
+                            const indexHtml = renderNodesToHtml(node.index, isNormalText);
+                            return `<div class="math-root">
+                                <span class="math-root-index">${indexHtml}</span>
+                                <div class="math-root-symbol-wrap">
+                                    <svg class="math-root-svg" viewBox="0 0 10 20" preserveAspectRatio="none">
+                                        <path d="M 1,12 L 3,12 L 6,18 L 10,0" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+                                    </svg>
+                                </div>
+                                <div class="math-root-content">${rootContentHtml}</div>
+                            </div>`;
+                        }
+                        return `<div class="math-root">
+                            <div class="math-root-symbol-wrap">
+                                <svg class="math-root-svg" viewBox="0 0 10 20" preserveAspectRatio="none">
+                                    <path d="M 1,12 L 3,12 L 6,18 L 10,0" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+                                </svg>
+                            </div>
+                            <div class="math-root-content">${rootContentHtml}</div>
+                        </div>`;
+
+                    case 'bracket':
+                        const leftBracketSym = node.left ? (node.left.val || node.left) : '(';
+                        const rightBracketSym = node.right ? (node.right.val || node.right) : ')';
+                        
+                        let leftSvg = '';
+                        let rightSvg = '';
+
+                        if (leftBracketSym === '(') {
+                            leftSvg = `<path d="M 8,2 A 8,8 0 0,0 2,10 A 8,8 0 0,0 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        } else if (leftBracketSym === '[') {
+                            leftSvg = `<path d="M 8,2 L 3,2 L 3,18 L 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        } else if (leftBracketSym === '\\{' || leftBracketSym === '{') {
+                            leftSvg = `<path d="M 8,2 C 6,2 5,4 5,6 L 5,8 C 5,9.5 4,10 2,10 C 4,10 5,10.5 5,12 L 5,14 C 5,16 6,18 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        } else if (leftBracketSym === '|') {
+                            leftSvg = `<path d="M 5,2 L 5,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        } else {
+                            leftSvg = `<path d="M 8,2 A 8,8 0 0,0 2,10 A 8,8 0 0,0 8,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        }
+
+                        if (rightBracketSym === ')') {
+                            rightSvg = `<path d="M 2,2 A 8,8 0 0,1 8,10 A 8,8 0 0,1 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        } else if (rightBracketSym === ']') {
+                            rightSvg = `<path d="M 2,2 L 7,2 L 7,18 L 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        } else if (rightBracketSym === '\\}' || rightBracketSym === '}') {
+                            rightSvg = `<path d="M 2,2 C 4,2 5,4 5,6 L 5,8 C 5,9.5 6,10 8,10 C 6,10 5,10.5 5,12 L 5,14 C 5,16 4,18 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        } else if (rightBracketSym === '|') {
+                            rightSvg = `<path d="M 5,2 L 5,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        } else {
+                            rightSvg = `<path d="M 2,2 A 8,8 0 0,1 8,10 A 8,8 0 0,1 2,18" fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke" />`;
+                        }
+
+                        return `<div class="math-bracket-wrap">
+                            <div class="math-bracket-symbol math-bracket-left">
+                                <svg viewBox="0 0 10 20" preserveAspectRatio="none" style="height: 100%; width: 100%;">${leftSvg}</svg>
+                            </div>
+                            <div class="math-bracket-content">${renderNodesToHtml(node.content, isNormalText)}</div>
+                            <div class="math-bracket-symbol math-bracket-right">
+                                <svg viewBox="0 0 10 20" preserveAspectRatio="none" style="height: 100%; width: 100%;">${rightSvg}</svg>
+                            </div>
+                        </div>`;
+                    
+                    case 'matrix':
+                        let leftParen = '';
+                        let rightParen = '';
+                        if (node.env === 'pmatrix') {
+                            leftParen = '(';
+                            rightParen = ')';
+                        } else if (node.env === 'bmatrix') {
+                            leftParen = '[';
+                            rightParen = ']';
+                        } else if (node.env === 'vmatrix') {
+                            leftParen = '|';
+                            rightParen = '|';
+                        }
+                        
+                        const gridHtml = node.rows.map(row => {
+                            return `<div class="math-matrix-row">
+                                ${row.map(cell => `<div class="math-matrix-cell">${renderNodesToHtml(cell, isNormalText)}</div>`).join('')}
+                            </div>`;
+                        }).join('');
+                        
+                        const matrixContent = `<div class="math-matrix">${gridHtml}</div>`;
+                        
+                        if (leftParen || rightParen) {
+                            return renderNodesToHtml([{
+                                type: 'bracket',
+                                left: leftParen,
+                                right: rightParen,
+                                content: [{ type: 'custom-html', html: matrixContent }]
+                            }], isNormalText);
+                        }
+                        
+                        return matrixContent;
+
+                    case 'decorator':
+                        const innerHtml = renderNodesToHtml(node.content, isNormalText);
+                        if (node.dec === 'vec' || node.dec === 'vector-arrow') {
+                            return `<span class="math-decorator-vec"><span class="math-dec-arrow">→</span><span class="math-dec-content">${innerHtml}</span></span>`;
+                        }
+                        if (node.dec === 'overline') {
+                            return `<span class="math-decorator-overline">${innerHtml}</span>`;
+                        }
+                        if (node.dec === 'hat') {
+                            return `<span class="math-decorator-hat"><span class="math-dec-hat">^</span><span class="math-dec-content">${innerHtml}</span></span>`;
+                        }
+                        return innerHtml;
+
+                    case 'custom-html':
+                        return node.html;
+                        
+                    default:
+                        return '';
+                }
+            }).join('');
+        }
+
+        function compileLatexToHtml(latex, fontFace, size, color) {
+            try {
+                const tokens = tokenize(latex);
+                const ast = parse(tokens);
+                const mathHtml = renderNodesToHtml(ast);
+                return `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color};">
+                    ${mathHtml}
+                </div>`;
+            } catch (err) {
+                console.error("Custom parser error:", err);
+                return `<div class="text-red-500 text-xs italic">Formül parse edilemedi: ${err.message}</div>`;
+            }
+        }
+
+        // Injected CSS inside MathLive Shadow DOM to apply custom font overrides
+        function applyFontToMathField(fontFamilyName) {
+            if (!mf || !mf.shadowRoot) {
+                // If shadow DOM isn't ready yet, retry in 50ms
+                setTimeout(() => applyFontToMathField(fontFamilyName), 50);
+                return;
+            }
+            
+            let styleEl = mf.shadowRoot.getElementById('custom-font-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'custom-font-style';
+                mf.shadowRoot.appendChild(styleEl);
+            }
+            
+            if (renderMode.value === 'mathjax') {
+                styleEl.textContent = '';
+                return;
+            }
+            
+            styleEl.textContent = `
+                /* Override standard math fonts for variables, text, and digits */
+                .ML__fieldcontainer, 
+                .ML__fieldcontainer *,
+                .ML__mathlive,
+                .ML__mathlive *,
+                .mord,
+                .mi,
+                .mn,
+                .mo,
+                .mathnormal,
+                .text {
+                    font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
+                }
+                
+                /* Keep math operator glyphs standard layout and sizes */
+                .mbin, .mrel, .mop {
+                    font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
+                }
+                
+                /* Set caret (cursor) color to match chosen theme color */
+                .ML__caret {
+                    background-color: ${currentColor} !important;
+                }
+            `;
+        }
+
+        // ====== LIVE PREVIEW & WORKSPACE CONTROLLER ======
+        function updatePreview() {
+            let latex = mf.getValue('latex');
+            latexInput.value = latex.replace(/\\placeholder\{.*?\}/g, '\\square');
+            
+            const mode = renderMode.value;
+            const selectedFont = fontFamily.value;
+            const sizeVal = fontSize.value;
+
+            // Apply selected styles directly to the interactive workspace math-field
+            mf.style.color = currentColor;
+            mf.style.fontSize = sizeVal + "px";
+            
+            // Update the sidebar font preview with the compiled math HTML
+            if (fontSampleText) {
+                const previewFont = (mode === 'custom') ? selectedFont : 'Times New Roman';
+                fontSampleText.innerHTML = compileLatexToHtml(latex, previewFont, 15, currentColor);
+            }
+
+            if (mode === 'custom') {
+                mf.style.fontFamily = `'${selectedFont}', sans-serif`;
+                applyFontToMathField(selectedFont);
+            } else {
+                mf.style.fontFamily = 'initial';
+                applyFontToMathField(''); // clear shadow overrides
+            }
+        }
+
+        // Double-ended synchronization (MathLive <-> Textarea)
+        mf.addEventListener('input', () => {
+            updatePreview();
+        });
+
+        latexInput.addEventListener('input', () => {
+            let latex = latexInput.value;
+            mf.setValue(latex.replace(/\\square/g, '\\placeholder{}'));
+            updatePreview();
+        });
+
+        // ====== HIGH QUALITY PNG EXPORT ======
         document.getElementById('downloadBtn').onclick = () => {
             const btn = document.getElementById('downloadBtn');
             const originalText = btn.innerHTML;
             
-            // --- 1. Aşama: Kod Hata Ön Kontrolü ---
+            // Syntax/grouping error checks before downloading
             let latexCodeRaw = mf.getValue('latex');
             const leftCount = (latexCodeRaw.match(/\\left/g) || []).length;
             const rightCount = (latexCodeRaw.match(/\\right/g) || []).length;
             
             if (leftCount !== rightCount) {
-                showError("Eksik veya kapatılmamış boyutlandırılabilir parantez (\\left ve \\right eşleşmiyor). Lütfen formülü kontrol edin.");
+                showError("Eksik veya kapatılmamış parantez (\\left ve \\right sayıları eşleşmiyor). Lütfen formülü kontrol edin.");
                 return;
             }
             
@@ -298,61 +1311,42 @@
             const closeBraceCount = (strippedLatex.match(/\}/g) || []).length;
             
             if (openBraceCount !== closeBraceCount) {
-                showError("Kapatılmamış gruplama parantezi ({ ve } eşleşmiyor). Lütfen formülü kontrol edin.");
+                showError("Kapatılmamış gruplama parantezi ({ ve } sembolleri eşleşmiyor). Lütfen formülü kontrol edin.");
                 return;
             }
-            // ------------------------------------
 
-            // Kullanıcıya işlem yapıldığını göster
-            btn.innerHTML = `<span class="animate-pulse">Hazırlanıyor...</span>`;
+            btn.innerHTML = `<span class="animate-pulse">PNG Hazırlanıyor...</span>`;
             
-            const fontSizeVal = document.getElementById('fontSize').value;
-            const fontFam = document.getElementById('fontFamily').value;
+            const fontSizeVal = fontSize.value;
+            const fontFam = fontFamily.value;
+            const mode = renderMode.value;
             
-            // Dışa aktarma için gizli ama boyutları hesaplanabilir bir ortam yaratıyoruz
+            // Create target export container
             const exportWrapper = document.createElement('div');
             exportWrapper.style.position = 'absolute';
             exportWrapper.style.left = '0px';
             exportWrapper.style.top = '0px';
-            exportWrapper.style.zIndex = '-9999'; // Kullanıcı görmeyecek şekilde arkada
-            exportWrapper.style.backgroundColor = '#ffffff'; // Şeffaflık olmaması için
-            exportWrapper.style.padding = '50px'; // Formül etrafında güzel bir boşluk
-            exportWrapper.style.color = currentColor;
-            exportWrapper.style.fontSize = fontSizeVal + 'px';
+            exportWrapper.style.zIndex = '-9999';
             exportWrapper.style.display = 'inline-block';
-            exportWrapper.style.minWidth = '100px'; // Sıfır boyutta kalmasını engelliyoruz
-            exportWrapper.style.minHeight = '50px';
+            exportWrapper.style.padding = '40px';
             
-            // MathLive içindeki kodları al ve \placeholder'ları kalıcı \square yap
-            let latexCode = mf.getValue('latex').replace(/\\placeholder\{.*?\}/g, '\\square');
-            
-            // Eğer Sans-Serif (Modern) font seçildiyse MathType mantığıyla formülü zorla
-            if (fontFam === 'sans-serif' && latexCode.trim() !== '') {
-                latexCode = `\\mathsf{${latexCode}}`;
+            // Apply chosen PNG background
+            if (currentBgColor === 'transparent') {
+                exportWrapper.style.backgroundColor = 'transparent';
+            } else {
+                exportWrapper.style.backgroundColor = currentBgColor;
             }
 
-            exportWrapper.innerHTML = `$$${latexCode}$$`;
-            document.body.appendChild(exportWrapper);
-
-            // Export alanını yüksek kaliteli MathJax ile render et
-            MathJax.typesetPromise([exportWrapper]).then(() => {
+            if (mode === 'custom') {
+                exportWrapper.innerHTML = compileLatexToHtml(latexCodeRaw, fontFam, fontSizeVal, currentColor);
+                document.body.appendChild(exportWrapper);
                 
-                // --- 2. Aşama: MathJax Render Hata Kontrolü ---
-                if (exportWrapper.querySelector('[data-mjx-error]')) {
-                    showError("Formülün LaTeX dizilişinde (syntax) anlaşılamayan bir hata var. Hatalı komutları veya eksik alanları düzeltin.");
-                    document.body.removeChild(exportWrapper);
-                    btn.innerHTML = originalText;
-                    return;
-                }
-                // ----------------------------------------------
-
-                // MathJax fontlarının DOM'a tam yerleşmesi ve boyutların kesinleşmesi için ufak bir bekleme (300ms)
+                // Small delay to ensure browser paints custom web fonts inside the DOM
                 setTimeout(() => {
                     htmlToImage.toPng(exportWrapper, { 
-                        backgroundColor: '#ffffff', 
-                        pixelRatio: 4, // Ultra Yüksek Çözünürlük
+                        backgroundColor: currentBgColor === 'transparent' ? null : currentBgColor, 
+                        pixelRatio: 4, // 4x high resolution
                         style: {
-                            // Çekim sırasında absolute pozisyonun kırpılma yapmasını engelliyoruz
                             position: 'relative',
                             left: 'auto',
                             top: 'auto',
@@ -361,34 +1355,81 @@
                     })
                     .then(dataUrl => {
                         const link = document.createElement('a');
-                        link.download = 'formulum.png';
+                        link.download = 'matematik-formulu.png';
                         link.href = dataUrl;
                         link.click();
                         
-                        // İşlem bitince DOM'u temizle ve butonu eski haline getir
                         document.body.removeChild(exportWrapper);
                         btn.innerHTML = originalText;
                     })
                     .catch(error => {
-                        console.error('İndirme sırasında html-to-image hatası!', error);
+                        console.error('PNG export failed:', error);
                         document.body.removeChild(exportWrapper);
                         btn.innerHTML = originalText;
-                        showError("İndirme sırasında bir grafik hatası oluştu. Lütfen tekrar deneyin.");
+                        showError("Görsel oluşturulurken bir hata oluştu.");
                     });
-                }, 300);
-            }).catch(error => {
-                console.error('MathJax render hatası!', error);
-                document.body.removeChild(exportWrapper);
-                btn.innerHTML = originalText;
-                showError("Formül oluşturulurken sistemsel bir hata oluştu.");
-            });
+                }, 350);
+            } else {
+                // MathJax Classic mode export
+                let latexCode = latexCodeRaw.replace(/\\placeholder\{.*?\}/g, '\\square');
+                
+                const mathjaxTarget = document.createElement('div');
+                mathjaxTarget.id = 'mjx-export-target';
+                mathjaxTarget.style.color = currentColor;
+                mathjaxTarget.style.fontSize = fontSizeVal + 'px';
+                mathjaxTarget.style.display = 'inline-block';
+                mathjaxTarget.innerHTML = `$$${latexCode}$$`;
+                
+                exportWrapper.appendChild(mathjaxTarget);
+                document.body.appendChild(exportWrapper);
+
+                MathJax.typesetPromise([mathjaxTarget]).then(() => {
+                    // Check MathJax render errors
+                    if (mathjaxTarget.querySelector('[data-mjx-error]')) {
+                        showError("Formül dizilişinde (syntax) anlaşılamayan bir hata var.");
+                        document.body.removeChild(exportWrapper);
+                        btn.innerHTML = originalText;
+                        return;
+                    }
+                    
+                    setTimeout(() => {
+                        htmlToImage.toPng(exportWrapper, { 
+                            backgroundColor: currentBgColor === 'transparent' ? null : currentBgColor, 
+                            pixelRatio: 4,
+                            style: {
+                                position: 'relative',
+                                left: 'auto',
+                                top: 'auto',
+                                zIndex: '1'
+                            }
+                        })
+                        .then(dataUrl => {
+                            const link = document.createElement('a');
+                            link.download = 'matematik-formulu.png';
+                            link.href = dataUrl;
+                            link.click();
+                            
+                            document.body.removeChild(exportWrapper);
+                            btn.innerHTML = originalText;
+                        })
+                        .catch(error => {
+                            console.error('PNG MathJax export failed:', error);
+                            document.body.removeChild(exportWrapper);
+                            btn.innerHTML = originalText;
+                            showError("Grafik render hatası.");
+                        });
+                    }, 350);
+                }).catch(error => {
+                    console.error('MathJax render error:', error);
+                    document.body.removeChild(exportWrapper);
+                    btn.innerHTML = originalText;
+                    showError("MathJax formülü oluşturamadı.");
+                });
+            }
         };
 
+        // Initialize default formula value in editor
+        mf.value = "\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}";
     </script>
-    
-    <!-- Geliştirici İmzası -->
-    <a href="https://instagram.com/berrusagir" target="_blank" rel="noopener noreferrer" class="fixed bottom-2 right-3 text-[11px] text-gray-400 dark:text-gray-600 hover:text-blue-500 font-medium z-50 tracking-wider transition-colors cursor-pointer">
-        Berru Sağır
-    </a>
 </body>
 </html>
