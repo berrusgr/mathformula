@@ -207,6 +207,9 @@ function parse(tokens) {
             } else if (tok.val === '\\text') {
                 const content = parseArgument();
                 return checkSubSup({ type: 'text-group', content });
+            } else if (tok.val === '\\mathbb') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'mathbb', content });
             } else {
                 return checkSubSup({ type: 'command', val: tok.val });
             }
@@ -499,6 +502,14 @@ function renderNodesToHtml(nodes, isNormalText = false) {
                     return `<span class="math-decorator-hat"><span class="math-dec-hat">^</span><span class="math-dec-content">${innerHtml}</span></span>`;
                 }
                 return innerHtml;
+
+            case 'mathbb':
+                const innerChar = renderNodesToHtml(node.content, isNormalText).trim();
+                const doubleStruck = {
+                    'R': 'ℝ', 'N': 'ℕ', 'Z': 'ℤ', 'Q': 'ℚ', 'C': 'ℂ', 'P': 'ℙ'
+                };
+                const mappedChar = doubleStruck[innerChar] || innerChar;
+                return `<span class="math-symbol" style="font-family: inherit;">${mappedChar}</span>`;
 
             case 'custom-html':
                 return node.html;
