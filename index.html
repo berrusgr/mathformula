@@ -425,8 +425,18 @@
                     <div id="formulaGridBg" class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 16px 16px;"></div>
                     
                     <div class="z-10 w-full flex items-center justify-center transition-all duration-300">
-                        <math-field id="mathPreview" class="text-3xl w-full" style="color: #000000;"></math-field>
+                        <math-field id="mathPreview" class="text-3xl w-full" style="color: #000000;" multiline></math-field>
                     </div>
+                </div>
+                
+                <!-- Workspace Utility Bar -->
+                <div class="flex gap-2.5 mt-2.5 shrink-0">
+                    <button id="addNewlineBtn" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-xs active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                        <span>⏎</span> Alt Satıra Geç (Yeni Satır)
+                    </button>
+                    <button id="addSpaceBtn" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold shadow-xs active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                        <span>⌴</span> Boşluk Ekle
+                    </button>
                 </div>
             </div>
         </div>
@@ -1496,6 +1506,21 @@
                     btn.innerHTML = originalText;
                     showError("MathJax formülü oluşturamadı.");
                 });
+            }
+        };
+
+        // Newline and Space utility buttons listeners
+        document.getElementById('addNewlineBtn').onclick = () => {
+            if (mf) {
+                mf.focus();
+                mf.executeCommand(['insert', '\\\\ ']); // Inserts double backslash newline
+            }
+        };
+
+        document.getElementById('addSpaceBtn').onclick = () => {
+            if (mf) {
+                mf.focus();
+                mf.executeCommand(['insert', '\\ ']); // Inserts LaTeX space
             }
         };
 
