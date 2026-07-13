@@ -520,7 +520,7 @@ function compileLatexToHtml(latex, fontFace, size, color) {
         const tokens = tokenize(latex);
         const ast = parse(tokens);
         const mathHtml = renderNodesToHtml(ast);
-        const result = `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color};">
+        const result = `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color}; display: block; text-align: ${currentAlignment}; width: 100%;">
             ${mathHtml}
         </div>`;
         if (compileCache.size > 100) {

@@ -334,6 +334,11 @@ function applyFontToMathField(fontFamilyName) {
             font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
         }
         
+        /* Force text blocks alignment */
+        .text, .ML__mathlive, .ML__fieldcontainer {
+            text-align: ${currentAlignment} !important;
+        }
+        
         /* Force multiline alignment inside MathLive */
         .ML__base, .vlist-t {
             align-items: ${currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center')} !important;
@@ -384,6 +389,21 @@ function updatePreview() {
     if (fontSampleText) {
         const previewFont = (mode === 'custom') ? selectedFont : 'Times New Roman';
         fontSampleText.innerHTML = compileLatexToHtml(latexRaw, previewFont, 15, currentColor);
+
+        // Reset scale and styles first
+        fontSampleText.style.transform = 'none';
+        fontSampleText.style.width = '100%';
+        fontSampleText.style.display = 'block';
+
+        // Dynamic scaling to fit sidebar preview box perfectly
+        const containerWidth = fontSamplePreview.clientWidth - 24; // 12px padding on each side
+        const contentWidth = fontSampleText.scrollWidth;
+        if (contentWidth > containerWidth && containerWidth > 0) {
+            const scale = containerWidth / contentWidth;
+            fontSampleText.style.transform = `scale(${scale})`;
+            fontSampleText.style.transformOrigin = currentAlignment === 'left' ? 'left top' : (currentAlignment === 'right' ? 'right top' : 'center top');
+            fontSampleText.style.width = `${100 / scale}%`; // Adjust wrapper width to prevent visual layout collapse
+        }
     }
 
     if (mode === 'custom') {
