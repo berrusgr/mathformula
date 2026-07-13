@@ -5,13 +5,23 @@ const ocrPrompt = document.getElementById('ocrPrompt');
 const ocrPreviewContainer = document.getElementById('ocrPreviewContainer');
 const ocrPreviewImage = document.getElementById('ocrPreviewImage');
 const ocrSelectFileLink = document.getElementById('ocrSelectFileLink');
-const ocrAnalyzeBtn = document.getElementById('ocrAnalyzeBtn');
+const ocrCancelBtn = document.getElementById('ocrCancelBtn');
 
-// Obfuscated key parts to prevent secret scanners from triggering
-const keyPart1 = "QVEuQWI4Uk42SlB1RTcxZHNF";
-const keyPart2 = "Y1NiUFJOMmE1bFM4MG5EZEZZ";
-const keyPart3 = "Tm1iSldXWENsLTR3OGQzbkE=";
-const apiKey = atob(keyPart1 + keyPart2 + keyPart3);
+if (ocrCancelBtn) {
+    ocrCancelBtn.onclick = (e) => {
+        e.stopPropagation();
+        selectedOcrFile = null;
+        ocrFileInput.value = "";
+        ocrPreviewImage.src = "";
+        ocrPreviewContainer.classList.add('hidden');
+        ocrPrompt.classList.remove('hidden');
+        ocrAnalyzeBtn.innerHTML = "Yapay Zeka ile Analiz Et";
+        ocrAnalyzeBtn.disabled = false;
+    };
+}
+
+// API Anahtarı lokal config.js'den alınır (GitHub'a pushlanmaz)
+const apiKey = window.GEMINI_API_KEY || "";
 let selectedOcrFile = null;
 
 // Open local file picker only when clicking the specific blue "dosya seçin" link
@@ -79,6 +89,12 @@ ocrAnalyzeBtn.onclick = (e) => {
     if (!selectedOcrFile) return;
 
     const originalBtnText = ocrAnalyzeBtn.innerHTML;
+
+    if (!apiKey || apiKey === 'BURAYA_API_ANAHTARINIZI_YAZIN') {
+        showError("API Anahtarı bulunamadı! Lütfen js/config.js dosyasını oluşturup geçerli bir Gemini API anahtarı ekleyin.");
+        return;
+    }
+
     ocrAnalyzeBtn.disabled = true;
     ocrAnalyzeBtn.innerHTML = `<span class="animate-pulse flex items-center justify-center gap-1">🤖 Yapay Zeka Çözümlüyor...</span>`;
 
@@ -103,13 +119,13 @@ ocrAnalyzeBtn.onclick = (e) => {
                     }
                 },
                 {
-                    text: "Identify all text and mathematical formulas in this image and convert them to clean LaTeX format. Do not wrap in markdown or backticks (e.g. no ```latex or ```). Follow these strict formatting rules: 1. Wrap any standard text words/phrases (Turkish or English) in \\text{...} to keep normal styling. 2. Align multiple rows using double backslash \\\\ line-breaks. 3. Use standard mathematical operators (like \\le, \\ge, \\cdot for multiplication dot, \\times, \\div, \\frac). Example: |x| \\le 2 \\iff -2 \\le x \\le 2 \\text{ olup bu aralıkta } 2 - (-2) + 1 = 5 \\text{ tane...}."
+                    text: "Identify all text and mathematical formulas in this image and convert them to clean LaTeX format. Do not wrap in markdown or backticks (e.g. no ```latex or ```). Follow these strict formatting rules: 1. Wrap any standard text words/phrases (Turkish or English) in \\text{...} to keep normal styling. 2. Align multiple rows using double backslash \\\\ line-breaks. 3. Use standard mathematical operators. 4. NEVER use LaTeX escape sequences for Turkish characters (like \\i, \\c{c}, \\u{g}). Write them natively as UTF-8 inside \\text{} (e.g. ı, İ, ş, Ş, ç, Ç, ğ, Ğ, ö, Ö, ü, Ü). Example: |x| \\le 2 \\iff -2 \\le x \\le 2 \\text{ olup bu aralıkta } 2 - (-2) + 1 = 5 \\text{ tane...}."
                 }
             ]
         }]
     };
 
-    fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

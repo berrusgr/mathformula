@@ -11,7 +11,7 @@ const categories = {
     "ARİTMETİK & CEBİR": ["+", "-", "\\times", ".", "\\div", ":", "=", "\\neq", "<", ">", "\\leq", "\\geq", "\\approx", "\\cong", "\\equiv", "\\propto", "\\pm", "\\infty", "\\%", "!"],
     "TRİGONOMETRİ & FONKSİYONLAR": ["\\sin", "\\cos", "\\tan", "\\cot", "\\sec", "\\csc", "\\arcsin", "\\arccos", "\\arctan", "\\log", "\\ln", "\\exp"],
     "ANALİZ & CALCULUS": ["\\int", "\\iint", "\\iiint", "\\oint", "\\sum", "\\prod", "\\lim", "\\sup", "\\inf", "\\frac{d}{dx}", "\\partial", "\\nabla"],
-    "KÜMELER & MANTIK": ["\\in", "\\notin", "\\subset", "\\subseteq", "\\supset", "\\supseteq", "\\cup", "\\cap", "\\setminus", "\\emptyset", "\\forall", "\\exists", "\\neg", "\\wedge", "\\vee", "\\Rightarrow", "\\Leftrightarrow"],
+    "KÜMELER & MANTIK": ["\\in", "\\notin", "\\subset", "\\subseteq", "\\supset", "\\supseteq", "\\cup", "\\cap", "\\setminus", "\\emptyset", "\\varnothing", "\\forall", "\\exists", "\\neg", "\\wedge", "\\vee", "\\Rightarrow", "\\Leftrightarrow"],
     "GEOMETRİ & VEKTÖRLER": ["^\\circ", "\\angle", "\\perp", "\\parallel", "\\triangle", "\\rightarrow", "\\vec{v}", "\\overrightarrow{AB}", "\\overline{AB}", "\\sim"],
     "YUNAN ALFABESİ": [
         { tex: "\\alpha", desc: "alpha" },
@@ -27,6 +27,40 @@ const categories = {
         { tex: "\\Delta", desc: "delta cap" },
         { tex: "\\Omega", desc: "omega cap" }
     ]
+};
+
+// Erişilebilirlik (Accessibility) Tooltipleri
+const tooltips = {
+    "\\frac{\\square}{\\square}": "Kesirli bir ifade oluşturabilirsiniz.",
+    "{\\square}^{2}": "Kare alma ifadesi ekleyebilirsiniz.",
+    "{\\square}^{3}": "Küp alma ifadesi ekleyebilirsiniz.",
+    "{\\square}^{\\square}": "Üslü bir ifade oluşturabilirsiniz.",
+    "\\sqrt{\\square}": "Kareköklü bir ifade oluşturabilirsiniz.",
+    "\\sqrt[\\square]{\\square}": "N. dereceden köklü bir ifade oluşturabilirsiniz.",
+    "|\\square|": "Mutlak değer ifadesi oluşturabilirsiniz.",
+    "\\left( \\square \\right)": "Parantez içi ifade ekleyebilirsiniz.",
+    "\\left[ \\square \\right]": "Köşeli parantez ekleyebilirsiniz.",
+    "\\left\\{ \\square \\right\\}": "Küme parantezi ekleyebilirsiniz.",
+    "{\\square}_{\\square}": "Alt indis (index) oluşturabilirsiniz.",
+    "\\int \\square dx": "Belirsiz integral şablonu ekleyebilirsiniz.",
+    "\\sum \\square": "Toplam (Sigma) sembolü şablonu ekleyebilirsiniz.",
+    "\\prod \\square": "Çarpım sembolü şablonu ekleyebilirsiniz.",
+    "\\lim_{\\square \\to \\square} \\square": "Limit şablonu ekleyebilirsiniz.",
+    "\\log_{\\square} \\square": "Logaritma şablonu ekleyebilirsiniz.",
+    "\\overrightarrow{\\square}": "Üzeri oklu vektör şablonu ekleyebilirsiniz.",
+    "\\overline{\\square}": "Üzeri çizgili ifade ekleyebilirsiniz.",
+    "\\vec{\\square}": "Kısa vektör oku ekleyebilirsiniz.",
+    "\\text{\\square}": "Düz metin kutusu ekleyebilirsiniz.",
+    "+": "Artı", "-": "Eksi", "\\times": "Çarpı", ".": "Çarpı Noktası", "\\div": "Bölü", ":": "Bölü İşareti", 
+    "=": "Eşittir", "\\neq": "Eşit Değildir", "<": "Küçüktür", ">": "Büyüktür", "\\leq": "Küçük Eşittir", "\\geq": "Büyük Eşittir", 
+    "\\approx": "Yaklaşık Eşittir", "\\cong": "Denktir", "\\equiv": "Denktir (Üç Çizgi)", "\\propto": "Orantılıdır", "\\pm": "Artı Eksi", "\\infty": "Sonsuz", "\\%": "Yüzde", "!": "Faktöriyel",
+    "\\sin": "Sinüs", "\\cos": "Kosinüs", "\\tan": "Tanjant", "\\cot": "Kotanjant", "\\sec": "Sekant", "\\csc": "Kosekant", 
+    "\\arcsin": "Ters Sinüs", "\\arccos": "Ters Kosinüs", "\\arctan": "Ters Tanjant", "\\log": "Logaritma", "\\ln": "Doğal Logaritma", "\\exp": "Eksponansiyel",
+    "\\int": "İntegral", "\\iint": "İki Katlı İntegral", "\\iiint": "Üç Katlı İntegral", "\\oint": "Kapalı Eğri İntegrali", "\\sum": "Toplam (Sigma)", "\\prod": "Çarpım (Pi)", 
+    "\\lim": "Limit", "\\sup": "Supremum", "\\inf": "İnfimum", "\\frac{d}{dx}": "Türev", "\\partial": "Kısmi Türev", "\\nabla": "Nabla (Gradiyent)",
+    "\\in": "Elemanıdır", "\\notin": "Elemanı Değildir", "\\subset": "Alt Kümesidir", "\\subseteq": "Alt Küme / Eşit", "\\supset": "Kapsar", "\\supseteq": "Kapsar / Eşit", 
+    "\\cup": "Birleşim", "\\cap": "Kesişim", "\\setminus": "Fark", "\\emptyset": "Boş Küme", "\\varnothing": "Boş Küme", "\\forall": "Her", "\\exists": "En Az Bir", "\\neg": "Değili (Mantık)", "\\wedge": "Ve", "\\vee": "Veya", "\\Rightarrow": "İse", "\\Leftrightarrow": "Ancak ve Ancak",
+    "^\\circ": "Derece", "\\angle": "Açı", "\\perp": "Diklik", "\\parallel": "Paralellik", "\\triangle": "Üçgen", "\\rightarrow": "Sağa Ok", "\\vec{v}": "v Vektörü", "\\overrightarrow{AB}": "AB Vektörü", "\\overline{AB}": "AB Doğru Parçası", "\\sim": "Benzerlik"
 };
 
 const standardColors = [
@@ -81,6 +115,7 @@ Object.keys(categories).forEach(cat => {
 
         let tex = typeof item === 'object' ? item.tex : item;
         let desc = typeof item === 'object' ? item.desc : null;
+        let tooltip = tooltips[tex] || (desc ? desc.charAt(0).toUpperCase() + desc.slice(1) : tex);
 
         let extraClass = "";
         if (tex.includes("\\lim") || tex.includes("\\log") || tex.includes("\\int") || tex.includes("\\overrightarrow") || tex.includes("\\text")) {
@@ -88,6 +123,7 @@ Object.keys(categories).forEach(cat => {
         }
 
         btn.className = "key-button p-2 text-slate-750 dark:text-slate-350 transition flex items-center justify-center min-h-[44px]" + extraClass;
+        btn.title = tooltip;
 
         // Color placeholders (\square) dynamically in blue for high-contrast combinations
         let displayTex;
@@ -121,6 +157,11 @@ Object.keys(categories).forEach(cat => {
 
 // Initialize template MathJax styling
 window.addEventListener('load', () => {
+    // Varsayılan formül (Default Formula)
+    if (!mf.getValue()) {
+        mf.setValue('x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}');
+    }
+
     setTimeout(() => {
         if (window.MathJax) {
             MathJax.typesetPromise([templateContainer]);
@@ -281,11 +322,18 @@ function applyFontToMathField(fontFamilyName) {
         .mathnormal,
         .text {
             font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
+            font-style: normal !important;
         }
         
         /* Keep math operator glyphs standard layout and sizes */
         .mbin, .mrel, .mop {
             font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
+        }
+        
+        /* Force multiline alignment inside MathLive */
+        .ML__base, .vlist-t {
+            align-items: ${currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center')} !important;
+            justify-content: ${currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center')} !important;
         }
         
         /* Set caret (cursor) color to match chosen theme color */
@@ -326,6 +374,7 @@ function updatePreview() {
     // Apply selected styles directly to the interactive workspace math-field
     mf.style.color = currentColor;
     mf.style.fontSize = sizeVal + "px";
+    mf.style.textAlign = currentAlignment;
 
     // Update the sidebar font preview with the compiled math HTML
     if (fontSampleText) {

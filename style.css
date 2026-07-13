@@ -104,7 +104,7 @@ math-field::part(virtual-keyboard-toggle) {
 
 /* Math variables and operators */
 .math-var {
-    font-style: italic;
+    font-style: normal;
     font-family: inherit;
     padding: 0 0.05em;
 }

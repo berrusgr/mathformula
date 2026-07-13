@@ -35,6 +35,10 @@ function tokenize(str) {
                     j++;
                 }
                 tokens.push({ type: 'COMMAND', val: str.substring(i, j) });
+                // Consume AT MOST ONE space after a command name to mimic LaTeX behavior
+                if (j < str.length && str[j] === ' ') {
+                    j++;
+                }
                 i = j;
             }
         } else if (c === ' ' || c === '\t' || c === '\n' || c === '\r') {
@@ -260,7 +264,7 @@ const COMMAND_MAPPING = {
     '\\cdot': '·', '\\cdotp': '·', '\\ldots': '…', '\\cdots': '⋯', '\\ddots': '⋱', '\\vdots': '⋮',
 
     '\\in': '∈', '\\notin': '∉', '\\subset': '⊂', '\\subseteq': '⊆', '\\supset': '⊃', '\\supseteq': '⊇',
-    '\\cup': '∪', '\\cap': '∩', '\\setminus': '∖', '\\emptyset': '∅',
+    '\\cup': '∪', '\\cap': '∩', '\\setminus': '∖', '\\emptyset': '∅', '\\varnothing': '∅',
     '\\forall': '∀', '\\exists': '∃', '\\neg': '¬', '\\wedge': '∧', '\\vee': '∨',
     '\\Rightarrow': '⇒', '\\Leftrightarrow': '⇔', '\\to': '→', '\\gets': '←', '\\rightarrow': '→', '\\leftarrow': '←',
 
@@ -277,6 +281,7 @@ const COMMAND_MAPPING = {
 
     '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan', '\\cot': 'cot', '\\sec': 'sec', '\\csc': 'csc',
     '\\arcsin': 'arcsin', '\\arccos': 'arccos', '\\arctan': 'arctan', '\\log': 'log', '\\ln': 'ln', '\\exp': 'exp',
+    '\\i': 'ı', '\\imath': 'ı'
 };
 
 function isLimitOperator(baseNodes) {
@@ -507,7 +512,7 @@ function renderNodesToHtml(nodes, isNormalText = false) {
 const compileCache = new Map();
 
 function compileLatexToHtml(latex, fontFace, size, color) {
-    const cacheKey = `${latex}_${fontFace}_${size}_${color}`;
+    const cacheKey = `${latex}_${fontFace}_${size}_${color}_${currentAlignment}`;
     if (compileCache.has(cacheKey)) {
         return compileCache.get(cacheKey);
     }
