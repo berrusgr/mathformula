@@ -1333,10 +1333,29 @@
             `;
         }
 
+        // Utility to wrap latex in gather block for multiline support
+        function setMathfieldValue(latex) {
+            let clean = latex.trim();
+            if (!clean.startsWith('\\begin{gather}')) {
+                clean = '\\begin{gather} ' + clean + ' \\end{gather}';
+            }
+            mf.setValue(clean.replace(/\\square/g, '\\placeholder{}'));
+        }
+
         // ====== LIVE PREVIEW & WORKSPACE CONTROLLER ======
         function updatePreview() {
-            let latex = mf.getValue('latex');
-            latexInput.value = latex.replace(/\\placeholder\{.*?\}/g, '\\square');
+            let latexRaw = mf.getValue('latex');
+            
+            // Strip outer gather block if present for the user input box
+            let cleanLatex = latexRaw;
+            if (cleanLatex.startsWith('\\begin{gather}')) {
+                cleanLatex = cleanLatex.substring('\\begin{gather}'.length).trim();
+            }
+            if (cleanLatex.endsWith('\\end{gather}')) {
+                cleanLatex = cleanLatex.substring(0, cleanLatex.length - '\\end{gather}'.length).trim();
+            }
+            
+            latexInput.value = cleanLatex.replace(/\\placeholder\{.*?\}/g, '\\square');
             
             const mode = renderMode.value;
             const selectedFont = fontFamily.value;
@@ -1349,7 +1368,7 @@
             // Update the sidebar font preview with the compiled math HTML
             if (fontSampleText) {
                 const previewFont = (mode === 'custom') ? selectedFont : 'Times New Roman';
-                fontSampleText.innerHTML = compileLatexToHtml(latex, previewFont, 15, currentColor);
+                fontSampleText.innerHTML = compileLatexToHtml(latexRaw, previewFont, 15, currentColor);
             }
 
             if (mode === 'custom') {
@@ -1368,7 +1387,7 @@
 
         latexInput.addEventListener('input', () => {
             let latex = latexInput.value;
-            mf.setValue(latex.replace(/\\square/g, '\\placeholder{}'));
+            setMathfieldValue(latex);
             updatePreview();
         });
 
@@ -1525,7 +1544,7 @@
         };
 
         // Initialize default formula value in editor
-        mf.value = "\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}";
+        setMathfieldValue("\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}");
     </script>
 </body>
 </html>
