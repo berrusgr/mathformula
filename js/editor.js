@@ -72,7 +72,7 @@ const standardColors = [
 
 let currentColor = "#000000";
 let currentBgColor = "#ffffff"; // Default background white
-let currentAlignment = "center"; // Default alignment centered
+let currentAlignment = "left"; // Default alignment left
 
 // Element references
 const mf = document.getElementById('mathPreview');
@@ -314,29 +314,24 @@ function applyFontToMathField(fontFamilyName) {
     }
 
     styleEl.textContent = `
-        /* Override standard math fonts for variables, text, and digits */
-        .ML__fieldcontainer, 
-        .ML__fieldcontainer *,
-        .ML__mathlive,
-        .ML__mathlive *,
-        .mord,
+        /* Override standard math fonts ONLY for variables, text, and digits */
         .mi,
-        .mn,
-        .mo,
         .mathnormal,
+        .mn,
         .text {
-            font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
+            font-family: '${fontFamilyName}', sans-serif !important;
             font-style: normal !important;
-        }
-        
-        /* Keep math operator glyphs standard layout and sizes */
-        .mbin, .mrel, .mop {
-            font-family: '${fontFamilyName}', 'Poppins', sans-serif !important;
         }
         
         /* Force text blocks alignment */
         .text, .ML__mathlive, .ML__fieldcontainer {
             text-align: ${currentAlignment} !important;
+        }
+        
+        /* Force multiline alignment inside MathLive */
+        .ML__base, .vlist-t {
+            align-items: ${currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center')} !important;
+            justify-content: ${currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center')} !important;
         }
         
         /* Force multiline alignment inside MathLive */
@@ -352,12 +347,21 @@ function applyFontToMathField(fontFamilyName) {
     `;
 }
 
-// Utility to wrap latex in gather block for multiline support
+// Utility to wrap latex in block for multiline support
 function setMathfieldValue(latex) {
     let clean = latex.trim();
-    if (!clean.startsWith('\\begin{gather}')) {
-        clean = '\\begin{gather} ' + clean + ' \\end{gather}';
+    
+    // Strip existing environments
+    if (clean.startsWith('\\begin{gather}')) {
+        clean = clean.substring('\\begin{gather}'.length, clean.length - '\\end{gather}'.length).trim();
+    } else if (clean.startsWith('\\begin{array}')) {
+        clean = clean.replace(/^\\begin\{array\}\{[^}]+\}/, '').replace(/\\end\{array\}$/, '').trim();
     }
+    
+    // Determine alignment column character
+    const alignChar = currentAlignment === 'left' ? 'l' : (currentAlignment === 'right' ? 'r' : 'c');
+    clean = `\\begin{array}{${alignChar}} ${clean} \\end{array}`;
+    
     mf.setValue(clean.replace(/\\square/g, '\\placeholder{}'));
 }
 
@@ -365,13 +369,12 @@ function setMathfieldValue(latex) {
 function updatePreview() {
     let latexRaw = mf.getValue('latex');
 
-    // Strip outer gather block if present for the user input box
+    // Strip outer environments if present for the user input box
     let cleanLatex = latexRaw;
     if (cleanLatex.startsWith('\\begin{gather}')) {
-        cleanLatex = cleanLatex.substring('\\begin{gather}'.length).trim();
-    }
-    if (cleanLatex.endsWith('\\end{gather}')) {
-        cleanLatex = cleanLatex.substring(0, cleanLatex.length - '\\end{gather}'.length).trim();
+        cleanLatex = cleanLatex.substring('\\begin{gather}'.length, cleanLatex.length - '\\end{gather}'.length).trim();
+    } else if (cleanLatex.startsWith('\\begin{array}')) {
+        cleanLatex = cleanLatex.replace(/^\\begin\{array\}\{[^}]+\}/, '').replace(/\\end\{array\}$/, '').trim();
     }
 
     latexInput.value = cleanLatex.replace(/\\placeholder\{.*?\}/g, '\\square');
@@ -385,27 +388,43 @@ function updatePreview() {
     mf.style.fontSize = sizeVal + "px";
     mf.style.textAlign = currentAlignment;
 
+    // Update formulaWrapper flex alignment classes dynamically on preview updates
+    const formulaWrapper = document.getElementById('formulaWrapper');
+    if (formulaWrapper) {
+        formulaWrapper.classList.remove('justify-center', 'justify-start', 'justify-end');
+        if (currentAlignment === 'left') {
+            formulaWrapper.classList.add('justify-start');
+        } else if (currentAlignment === 'right') {
+            formulaWrapper.classList.add('justify-end');
+        } else {
+            formulaWrapper.classList.add('justify-center');
+        }
+    }
+
     // Update the sidebar font preview with the compiled math HTML
     if (fontSampleText) {
         const previewFont = (mode === 'custom') ? selectedFont : 'Times New Roman';
         fontSampleText.innerHTML = compileLatexToHtml(latexRaw, previewFont, 15, currentColor);
 
-        // Reset scale and styles first
+        // Reset styles on container
         fontSampleText.style.transform = 'none';
-        fontSampleText.style.width = 'max-content';
-        fontSampleText.style.display = 'block';
+        fontSampleText.style.width = '100%';
+        fontSampleText.style.display = 'flex';
         fontSampleText.style.justifyContent = currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center');
 
-        // Dynamic scaling to fit sidebar preview box perfectly
-        const containerWidth = fontSamplePreview.clientWidth - 24; // 12px padding on each side
-        const contentWidth = fontSampleText.scrollWidth;
-        if (contentWidth > containerWidth && containerWidth > 0) {
-            const scale = containerWidth / contentWidth;
-            fontSampleText.style.transform = `scale(${scale})`;
-            fontSampleText.style.transformOrigin = currentAlignment === 'left' ? 'left top' : (currentAlignment === 'right' ? 'right top' : 'center top');
-            fontSampleText.style.width = `${100 / scale}%`; // Adjust wrapper width to prevent visual layout collapse
-        } else {
-            fontSampleText.style.width = '100%';
+        // Target the compiled formula container inside to scale it down without expanding the outer box
+        const renderRoot = fontSampleText.querySelector('.math-render-root');
+        if (renderRoot) {
+            renderRoot.style.transform = 'none';
+            renderRoot.style.transformOrigin = currentAlignment === 'left' ? 'left top' : (currentAlignment === 'right' ? 'right top' : 'center top');
+            
+            const containerWidth = fontSamplePreview.clientWidth - 24; // 12px padding on each side
+            const contentWidth = renderRoot.scrollWidth;
+            
+            if (contentWidth > containerWidth && containerWidth > 0) {
+                const scale = containerWidth / contentWidth;
+                renderRoot.style.transform = `scale(${scale})`;
+            }
         }
     }
 
@@ -615,10 +634,43 @@ if (submitTextModalBtn) {
     submitTextModalBtn.onclick = () => {
         const textVal = modalTextInput.value.trim();
         if (textVal && mf) {
+            // Kullanıcı "ı" harfinden sonra boşluk bırakmışsa, LaTeX'in bu boşluğu yutmasını engellemek için
+            // korumalı LaTeX boşluğuna (\ ) çeviriyoruz.
+            const safeTextVal = textVal.replace(/ı /g, 'ı\\ ');
+            
             // Metin ifadesini latex \text{...} formatında ekle
-            mf.executeCommand(['insert', `\\text{${textVal}}`]);
+            mf.executeCommand(['insert', `\\text{${safeTextVal}}`]);
             updatePreview();
         }
         closeTextModal();
+    };
+}
+
+// Görsel Tasarım Alanı Yakınlaştırma / Uzaklaştırma (Zoom In / Out Controls)
+let currentZoom = 1.0;
+const formulaWrapper = document.getElementById('formulaWrapper');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const zoomResetBtn = document.getElementById('zoomResetBtn');
+
+if (zoomInBtn && zoomOutBtn && zoomResetBtn && formulaWrapper) {
+    function applyZoom() {
+        formulaWrapper.style.zoom = currentZoom;
+        zoomResetBtn.innerText = `%${Math.round(currentZoom * 100)}`;
+    }
+
+    zoomInBtn.onclick = () => {
+        currentZoom = Math.min(currentZoom + 0.1, 2.0);
+        applyZoom();
+    };
+
+    zoomOutBtn.onclick = () => {
+        currentZoom = Math.max(currentZoom - 0.1, 0.5);
+        applyZoom();
+    };
+
+    zoomResetBtn.onclick = () => {
+        currentZoom = 1.0;
+        applyZoom();
     };
 }

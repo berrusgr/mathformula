@@ -26,6 +26,29 @@ body {
     background: #94a3b8;
 }
 
+/* Explicit scrollbar for design preview container to be highly visible */
+#designPreviewContainer::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+#designPreviewContainer::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 6px;
+}
+
+.dark #designPreviewContainer::-webkit-scrollbar-thumb {
+    background: #64748b;
+}
+
+#designPreviewContainer::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+.dark #designPreviewContainer::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 /* Dark mode template symbols overrides */
 .dark #templateContainer mjx-container,
 .dark #templateContainer mjx-container * {
@@ -111,8 +134,8 @@ math-field::part(virtual-keyboard-toggle) {
 }
 
 .math-symbol {
-    font-family: inherit;
-    padding: 0 0.1em;
+    font-family: 'Cambria Math', 'DejaVu Math TeX Gyre', 'Times New Roman', serif !important;
+    padding: 0 0.25em;
 }
 
 .math-text-cmd {
@@ -123,7 +146,7 @@ math-field::part(virtual-keyboard-toggle) {
 }
 
 .math-operator-large {
-    font-family: inherit;
+    font-family: 'Cambria Math', 'DejaVu Math TeX Gyre', 'Times New Roman', serif !important;
     font-style: normal;
     font-weight: normal;
     display: inline-block;

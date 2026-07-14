@@ -34,7 +34,8 @@ function tokenize(str) {
                 while (j < str.length && isLetter(str[j])) {
                     j++;
                 }
-                tokens.push({ type: 'COMMAND', val: str.substring(i, j) });
+                const cmdName = str.substring(i, j);
+                tokens.push({ type: 'COMMAND', val: cmdName });
                 // Consume AT MOST ONE space after a command name to mimic LaTeX behavior
                 if (j < str.length && str[j] === ' ') {
                     j++;
@@ -142,6 +143,12 @@ function parse(tokens) {
             } else if (tok.val === '\\begin') {
                 const envTok = parseArgument();
                 const envName = envTok.map(n => n.val || '').join('');
+
+                // If environment is array, it has a second argument for alignment, e.g. \begin{array}{l}
+                // We must consume it so it doesn't render as content in the first cell!
+                if (envName === 'array' && peek() && peek().type === 'OPEN') {
+                    parseArgument();
+                }
 
                 const contentTokens = [];
                 let depth = 1;
@@ -270,6 +277,10 @@ const COMMAND_MAPPING = {
     '\\cup': '∪', '\\cap': '∩', '\\setminus': '∖', '\\emptyset': '∅', '\\varnothing': '∅',
     '\\forall': '∀', '\\exists': '∃', '\\neg': '¬', '\\wedge': '∧', '\\vee': '∨',
     '\\Rightarrow': '⇒', '\\Leftrightarrow': '⇔', '\\to': '→', '\\gets': '←', '\\rightarrow': '→', '\\leftarrow': '←',
+    '\\Longrightarrow': '⇒', '\\Longleftrightarrow': '⇔', '\\longrightarrow': '→', '\\longleftrightarrow': '↔',
+    '\\Longrightarrows': '⇒',
+    '\\textbf': '', '\\textit': '', '\\texttt': '', '\\textsf': '',
+    '\\le': '≤', '\\ge': '≥',
 
     '\\partial': '∂', '\\nabla': '∇', '\\angle': '∠', '\\perp': '⊥', '\\parallel': '∥',
     '\\triangle': '△', '\\sim': '∼',
@@ -295,18 +306,29 @@ function isLimitOperator(baseNodes) {
     return false;
 }
 
-function renderNodesToHtml(nodes, isNormalText = false) {
+function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
     return nodes.map(node => {
         switch (node.type) {
             case 'text':
                 let val = node.val;
                 if (val === ' ') return '&nbsp;';
+                if (!isNormalText && ['+', '-', '=', '<', '>', ':', '≈', '≠', '≤', '≥'].includes(val)) {
+                    return `<span class="math-symbol">${val}</span>`;
+                }
+                if (!isNormalText && val === ',') {
+                    return `<span style="margin-left: 0.25em; margin-right: 0.25em; display: inline-block;">,</span>`;
+                }
                 if (!isNormalText && isLetter(val)) {
-                    return `<span class="math-var">${val}</span>`;
+                    const fontStyle = fontFace ? ` style="font-family: '${fontFace}', sans-serif;"` : '';
+                    return `<span class="math-var"${fontStyle}>${val}</span>`;
                 }
                 return `<span>${val}</span>`;
 
             case 'command':
+                if (node.val === '\\imath' || node.val === '\\i') {
+                    const fontStyle = fontFace ? ` style="font-family: '${fontFace}', sans-serif;"` : '';
+                    return `<span class="math-var"${fontStyle}>ı</span>`;
+                }
                 if (node.val === '\\placeholder') {
                     return `<span class="math-placeholder-box"></span>`;
                 }
@@ -332,64 +354,66 @@ function renderNodesToHtml(nodes, isNormalText = false) {
                         return `<span class="math-symbol">${cmdVal}</span>`;
                     }
                 }
-                return `<span class="math-text-cmd">${cmdVal}</span>`;
+                const fontStyleCmd = fontFace ? ` style="font-family: '${fontFace}', sans-serif;"` : '';
+                return `<span class="math-text-cmd"${fontStyleCmd}>${cmdVal}</span>`;
 
             case 'group':
-                return `<span class="math-group">${renderNodesToHtml(node.content, isNormalText)}</span>`;
+                return `<span class="math-group">${renderNodesToHtml(node.content, isNormalText, fontFace)}</span>`;
 
             case 'text-group':
-                return `<span class="math-text-normal">${renderNodesToHtml(node.content, true)}</span>`;
+                const fontStyleText = fontFace ? ` style="font-family: '${fontFace}', sans-serif;"` : '';
+                return `<span class="math-text-normal"${fontStyleText}>${renderNodesToHtml(node.content, true, fontFace)}</span>`;
 
             case 'frac':
                 return `<div class="math-frac">
-                    <div class="math-num">${renderNodesToHtml(node.num, isNormalText)}</div>
-                    <div class="math-den">${renderNodesToHtml(node.den, isNormalText)}</div>
+                    <div class="math-num">${renderNodesToHtml(node.num, isNormalText, fontFace)}</div>
+                    <div class="math-den">${renderNodesToHtml(node.den, isNormalText, fontFace)}</div>
                 </div>`;
 
             case 'sub':
                 if (isLimitOperator(node.base)) {
                     return `<div class="math-limits-op-wrap">
-                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                        <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText, fontFace)}</span>
+                        <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText, fontFace)}</sub>
                     </div>`;
                 }
                 return `<span class="math-sub-wrap">
-                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                    <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText, fontFace)}</span>
+                    <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText, fontFace)}</sub>
                 </span>`;
 
             case 'sup':
                 if (isLimitOperator(node.base)) {
                     return `<div class="math-limits-op-wrap">
-                        <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText)}</sup>
-                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                        <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText, fontFace)}</sup>
+                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText, fontFace)}</span>
                     </div>`;
                 }
                 return `<span class="math-sup-wrap">
-                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                    <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText)}</sup>
+                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText, fontFace)}</span>
+                    <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText, fontFace)}</sup>
                 </span>`;
 
             case 'subsup':
                 if (isLimitOperator(node.base)) {
                     return `<div class="math-limits-op-wrap">
-                        <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText)}</sup>
-                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText)}</span>
-                        <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                        <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText, fontFace)}</sup>
+                        <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText, fontFace)}</span>
+                        <sub class="math-limit-bottom">${renderNodesToHtml(node.sub, isNormalText, fontFace)}</sub>
                     </div>`;
                 }
                 return `<span class="math-subsup-wrap">
-                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText)}</span>
+                    <span class="math-base">${renderNodesToHtml(node.base, isNormalText, fontFace)}</span>
                     <span class="math-scripts">
-                        <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText)}</sup>
-                        <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText)}</sub>
+                        <sup class="math-sup">${renderNodesToHtml(node.sup, isNormalText, fontFace)}</sup>
+                        <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText, fontFace)}</sub>
                     </span>
                 </span>`;
 
             case 'root':
-                const rootContentHtml = renderNodesToHtml(node.content, isNormalText);
+                const rootContentHtml = renderNodesToHtml(node.content, isNormalText, fontFace);
                 if (node.index && node.index.length > 0) {
-                    const indexHtml = renderNodesToHtml(node.index, isNormalText);
+                    const indexHtml = renderNodesToHtml(node.index, isNormalText, fontFace);
                     return `<div class="math-root">
                         <span class="math-root-index">${indexHtml}</span>
                         <div class="math-root-symbol-wrap">
@@ -444,7 +468,7 @@ function renderNodesToHtml(nodes, isNormalText = false) {
                     <div class="math-bracket-symbol math-bracket-left">
                         <svg viewBox="0 0 10 20" preserveAspectRatio="none" style="height: 100%; width: 100%;">${leftSvg}</svg>
                     </div>
-                    <div class="math-bracket-content">${renderNodesToHtml(node.content, isNormalText)}</div>
+                    <div class="math-bracket-content">${renderNodesToHtml(node.content, isNormalText, fontFace)}</div>
                     <div class="math-bracket-symbol math-bracket-right">
                         <svg viewBox="0 0 10 20" preserveAspectRatio="none" style="height: 100%; width: 100%;">${rightSvg}</svg>
                     </div>
@@ -464,18 +488,28 @@ function renderNodesToHtml(nodes, isNormalText = false) {
                     rightParen = '|';
                 }
 
-                const gridHtml = node.rows.map(row => {
-                    return `<div class="math-matrix-row">
-                        ${row.map(cell => `<div class="math-matrix-cell">${renderNodesToHtml(cell, isNormalText)}</div>`).join('')}
-                    </div>`;
-                }).join('');
-
-                // Apply custom alignment styles if the environment is a gather environment (our multi-line engine)
                 let alignStyle = '';
-                if (node.env === 'gather') {
+                if (node.env === 'gather' || node.env === 'array') {
                     const alignFlex = currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center');
                     alignStyle = ` style="align-items: ${alignFlex} !important;"`;
                 }
+
+                const gridHtml = node.rows.map(row => {
+                    let rowAlign = '';
+                    if (node.env === 'gather' || node.env === 'array') {
+                        const justifyFlex = currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center');
+                        rowAlign = ` style="justify-content: ${justifyFlex} !important;"`;
+                    }
+                    return `<div class="math-matrix-row"${rowAlign}>
+                        ${row.map(cell => {
+                            let cellAlign = '';
+                            if (node.env === 'gather' || node.env === 'array') {
+                                cellAlign = ` style="text-align: ${currentAlignment} !important;"`;
+                            }
+                            return `<div class="math-matrix-cell"${cellAlign}>${renderNodesToHtml(cell, isNormalText, fontFace)}</div>`;
+                        }).join('')}
+                    </div>`;
+                }).join('');
 
                 const matrixContent = `<div class="math-matrix"${alignStyle}>${gridHtml}</div>`;
 
@@ -485,13 +519,13 @@ function renderNodesToHtml(nodes, isNormalText = false) {
                         left: leftParen,
                         right: rightParen,
                         content: [{ type: 'custom-html', html: matrixContent }]
-                    }], isNormalText);
+                    }], isNormalText, fontFace);
                 }
 
                 return matrixContent;
 
             case 'decorator':
-                const innerHtml = renderNodesToHtml(node.content, isNormalText);
+                const innerHtml = renderNodesToHtml(node.content, isNormalText, fontFace);
                 if (node.dec === 'vec' || node.dec === 'vector-arrow') {
                     return `<span class="math-decorator-vec"><span class="math-dec-arrow">→</span><span class="math-dec-content">${innerHtml}</span></span>`;
                 }
@@ -504,7 +538,7 @@ function renderNodesToHtml(nodes, isNormalText = false) {
                 return innerHtml;
 
             case 'mathbb':
-                const innerChar = renderNodesToHtml(node.content, isNormalText).trim();
+                const innerChar = renderNodesToHtml(node.content, isNormalText, fontFace).trim();
                 const doubleStruck = {
                     'R': 'ℝ', 'N': 'ℕ', 'Z': 'ℤ', 'Q': 'ℚ', 'C': 'ℂ', 'P': 'ℙ'
                 };
@@ -523,14 +557,19 @@ function renderNodesToHtml(nodes, isNormalText = false) {
 const compileCache = new Map();
 
 function compileLatexToHtml(latex, fontFace, size, color) {
-    const cacheKey = `${latex}_${fontFace}_${size}_${color}_${currentAlignment}`;
+    // Normal metinlerde LaTeX kuralları işlesin (Tokenizer kendi boşluk yutma kuralını uygulayacak)
+    let cleanLatex = latex;
+
+    // Split by lines, trim each line to prevent leading/trailing space alignment shifts, then rejoin
+    cleanLatex = cleanLatex.split('\\\\').map(line => line.trim()).join(' \\\\ ');
+    const cacheKey = `${cleanLatex}_${fontFace}_${size}_${color}_${currentAlignment}`;
     if (compileCache.has(cacheKey)) {
         return compileCache.get(cacheKey);
     }
     try {
-        const tokens = tokenize(latex);
+        const tokens = tokenize(cleanLatex);
         const ast = parse(tokens);
-        const mathHtml = renderNodesToHtml(ast);
+        const mathHtml = renderNodesToHtml(ast, false, fontFace);
         const result = `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color}; display: block; text-align: ${currentAlignment}; width: max-content;">
             ${mathHtml}
         </div>`;

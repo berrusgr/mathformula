@@ -94,18 +94,24 @@
             <!-- Görsel Tasarım & Düzenleme Alanı -->
             <div class="flex-grow flex flex-col">
                 <label
-                    class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Görsel
-                    Tasarım & Düzenleme Alanı (Düzenlemek İçin Tıklayın)</label>
+                    class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Görsel Tasarım & Düzenleme Alanı (Düzenlemek İçin Tıklayın)</label>
                 <div id="designPreviewContainer"
-                    class="flex-grow bg-white border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center p-8 shadow-inner overflow-auto min-h-[220px] transition-all relative cursor-text hover:border-slate-300 dark:hover:border-slate-700">
+                    class="flex-grow bg-white border border-slate-200 dark:border-slate-800 rounded-xl p-8 shadow-inner overflow-auto min-h-[220px] transition-all relative cursor-text hover:border-slate-300 dark:hover:border-slate-700 flex">
                     <!-- Dinamik olarak seçilen renge göre arka plan deseni/grid eklenebilir -->
                     <div id="formulaGridBg" class="absolute inset-0 pointer-events-none opacity-20"
                         style="background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 16px 16px;">
                     </div>
-
-                    <div class="z-10 w-full flex items-center justify-center transition-all duration-300">
-                        <math-field id="mathPreview" class="text-3xl w-full" style="color: #000000;"
+ 
+                    <div id="formulaWrapper" class="z-10 max-w-[700px] w-full flex items-center justify-center transition-all duration-300 m-auto">
+                        <math-field id="mathPreview" class="text-3xl" style="color: #000000;"
                             multiline></math-field>
+                    </div>
+
+                    <!-- Zoom Kontrolleri -->
+                    <div class="absolute right-4 bottom-4 flex gap-1.5 z-20 select-none">
+                        <button id="zoomOutBtn" class="w-8 h-8 rounded-lg bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center text-sm font-bold text-slate-650 dark:text-slate-350 hover:scale-105 active:scale-95 transition-all" title="Uzaklaştır">-</button>
+                        <button id="zoomResetBtn" class="px-2 h-8 rounded-lg bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center text-[10px] font-bold text-slate-650 dark:text-slate-350 hover:scale-105 active:scale-95 transition-all" title="Sıfırla">%100</button>
+                        <button id="zoomInBtn" class="w-8 h-8 rounded-lg bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center text-sm font-bold text-slate-650 dark:text-slate-350 hover:scale-105 active:scale-95 transition-all" title="Yakınlaştır">+</button>
                     </div>
                 </div>
 
@@ -210,10 +216,10 @@
                         (Alignment)</label>
                     <div class="grid grid-cols-3 gap-2" id="alignOptionGrid">
                         <button data-align="left"
-                            class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center text-slate-750 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs">⬅️
+                            class="bg-white dark:bg-slate-800 border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center text-slate-900 dark:text-white transition shadow-sm">⬅️
                             Sola</button>
                         <button data-align="center"
-                            class="bg-white dark:bg-slate-800 border-2 border-blue-500 rounded-lg p-2 text-xs font-bold text-center text-slate-900 dark:text-white transition shadow-sm">↔️
+                            class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center text-slate-750 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs">↔️
                             Orta</button>
                         <button data-align="right"
                             class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs font-bold text-center text-slate-750 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs">➡️
