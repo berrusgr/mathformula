@@ -12,7 +12,7 @@ const categories = {
     "TRİGONOMETRİ & FONKSİYONLAR": ["\\sin", "\\cos", "\\tan", "\\cot", "\\sec", "\\csc", "\\arcsin", "\\arccos", "\\arctan", "\\log", "\\ln", "\\exp"],
     "ANALİZ & CALCULUS": ["\\int", "\\iint", "\\iiint", "\\oint", "\\sum", "\\prod", "\\lim", "\\sup", "\\inf", "\\frac{d}{dx}", "\\partial", "\\nabla"],
     "KÜMELER & MANTIK": ["\\in", "\\notin", "\\subset", "\\subseteq", "\\supset", "\\supseteq", "\\cup", "\\cap", "\\setminus", "\\emptyset", "\\varnothing", "\\forall", "\\exists", "\\neg", "\\wedge", "\\vee", "\\Rightarrow", "\\Leftrightarrow"],
-    "GEOMETRİ & VEKTÖRLER": ["^\\circ", "\\angle", "\\perp", "\\parallel", "\\triangle", "\\rightarrow", "\\vec{v}", "\\overrightarrow{AB}", "\\overline{AB}", "\\sim"],
+    "GEOMETRİ & VEKTÖRLER": ["^\\circ", "\\angle", "\\perp", "\\parallel", "\\triangle", "\\widehat{\\square}", "\\rightarrow", "\\vec{v}", "\\overrightarrow{AB}", "\\overline{AB}", "\\sim"],
     "YUNAN ALFABESİ": [
         { tex: "\\alpha", desc: "alpha" },
         { tex: "\\beta", desc: "beta" },
@@ -50,6 +50,7 @@ const tooltips = {
     "\\overrightarrow{\\square}": "Üzeri oklu vektör şablonu ekleyebilirsiniz.",
     "\\overline{\\square}": "Üzeri çizgili ifade ekleyebilirsiniz.",
     "\\vec{\\square}": "Kısa vektör oku ekleyebilirsiniz.",
+    "\\widehat{\\square}": "Üzeri geniş çatı (açı/üçgen) şablonu ekleyebilirsiniz.",
     "\\text{\\square}": "Düz metin kutusu ekleyebilirsiniz.",
     "+": "Artı", "-": "Eksi", "\\times": "Çarpı", ".": "Çarpı Noktası", "\\div": "Bölü", ":": "Bölü İşareti", 
     "=": "Eşittir", "\\neq": "Eşit Değildir", "<": "Küçüktür", ">": "Büyüktür", "\\leq": "Küçük Eşittir", "\\geq": "Büyük Eşittir", 

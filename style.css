@@ -401,3 +401,38 @@ math-field::part(virtual-keyboard-toggle) {
     border-radius: 0.15em;
     vertical-align: middle;
 }
+
+.math-decorator-widehat {
+    display: inline-block;
+    position: relative;
+    padding-top: 0.7em; /* Space reserved for the hat */
+    margin: 0 0.05em;
+}
+
+.math-decorator-widehat.single-char {
+    padding-top: 0.5em; /* Less space needed for single letter hat */
+}
+
+.math-dec-widehat-symbol {
+    position: absolute;
+    top: 0;
+    left: -0.1em;
+    right: -0.1em;
+    display: flex;
+    align-items: flex-end; /* Align SVG to the bottom of the reserved space */
+    justify-content: center;
+}
+
+.math-decorator-widehat.single-char .math-dec-widehat-symbol {
+    left: -0.15em;
+    right: -0.15em;
+}
+
+.math-dec-widehat-svg {
+    width: 100%;
+    height: 0.55em;
+}
+
+.math-decorator-widehat.single-char .math-dec-widehat-svg {
+    height: 0.35em; /* Flatter hat for single characters */
+}

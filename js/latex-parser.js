@@ -211,6 +211,9 @@ function parse(tokens) {
             } else if (tok.val === '\\hat') {
                 const content = parseArgument();
                 return checkSubSup({ type: 'decorator', dec: 'hat', content });
+            } else if (tok.val === '\\widehat') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'decorator', dec: 'widehat', content });
             } else if (tok.val === '\\text') {
                 const content = parseArgument();
                 return checkSubSup({ type: 'text-group', content });
@@ -534,6 +537,24 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                 }
                 if (node.dec === 'hat') {
                     return `<span class="math-decorator-hat"><span class="math-dec-hat">^</span><span class="math-dec-content">${innerHtml}</span></span>`;
+                }
+                if (node.dec === 'widehat') {
+                    // İçeriğin tek bir harften oluşup oluşmadığını kontrol et
+                    let isSingle = false;
+                    if (node.content && node.content.length === 1) {
+                        const innerNode = node.content[0];
+                        if (innerNode.type === 'text' && innerNode.val.trim().length === 1) {
+                            isSingle = true;
+                        } else if (innerNode.type === 'command' && COMMAND_MAPPING[innerNode.val] && COMMAND_MAPPING[innerNode.val].length === 1) {
+                            isSingle = true;
+                        }
+                    }
+                    const singleClass = isSingle ? ' single-char' : '';
+                    
+                    // viewBox'ı büyüterek (24) ve stroke-linejoin="round" kullanarak tepe noktasının düz kırpılmasını engelliyoruz
+                    const svgHtml = `<svg class="math-dec-widehat-svg" viewBox="0 0 100 24" preserveAspectRatio="none"><path d="M 0,22 L 50,2 L 100,22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path></svg>`;
+                    
+                    return `<span class="math-decorator-widehat${singleClass}"><span class="math-dec-widehat-symbol">${svgHtml}</span><span class="math-dec-content">${innerHtml}</span></span>`;
                 }
                 return innerHtml;
 

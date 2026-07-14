@@ -138,7 +138,7 @@ function handleOcrImage(file) {
                     }
                 },
                 {
-                    text: "Identify all text and mathematical formulas in this image and convert them to clean LaTeX format. Do not wrap in markdown or backticks (e.g. no ```latex or ```). Follow these strict formatting rules: 1. Wrap ONLY standard human language words/phrases (Turkish or English) in \\text{...}. CRITICAL: NEVER put math variables (A, B, x), numbers, or operators (\\cup, \\times, \\setminus) inside \\text{...}. Math MUST be outside. Example: A \\cup B \\text{ kümesinin eleman sayısı } 5 \\text{ ise...}. 2. Align multiple rows using double backslash \\\\ line-breaks. Keep the overall output layout compact and square-like by adding line breaks frequently at logical phrase/sentence boundaries, avoiding very wide single lines that span horizontally. 3. Use standard mathematical operators. Specifically, always use: \\in for 'element of' (e.g. y \\in \\mathbb{R}), \\mathbb{R} for real numbers, \\mathbb{N} for natural numbers, \\mathbb{Z} for integers, \\varnothing or \\emptyset for empty set, \\le for less than or equal to, \\ge for greater than or equal to, and \\times for multiplication. 4. NEVER use LaTeX escape sequences for Turkish characters (like \\i, \\c{c}, \\u{g}). Write them natively as UTF-8 inside \\text{} (e.g. ı, İ, ş, Ş, ç, Ç, ğ, Ğ, ö, Ö, ü, Ü). Example: |x| \\le 2 \\iff -2 \\le x \\le 2 \\text{ olup bu aralıkta } 2 - (-2) + 1 = 5 \\text{ tane...}."
+                    text: "Identify all text and mathematical formulas in this image and convert them to clean LaTeX format. Do not wrap in markdown or backticks (e.g. no ```latex or ```). Follow these strict formatting rules: 1. Wrap ONLY standard human language words/phrases (Turkish or English) in \\text{...}. CRITICAL: NEVER put math variables (A, B, x), numbers, or operators (\\cup, \\times, \\setminus) inside \\text{...}. Math MUST be outside. Example: A \\cup B \\text{ kümesinin eleman sayısı } 5 \\text{ ise...}. 2. Align multiple rows using double backslash \\\\ line-breaks. Keep the overall output layout compact and square-like by adding line breaks frequently at logical phrase/sentence boundaries, avoiding very wide single lines that span horizontally. 3. Use standard mathematical operators. Specifically, always use: \\in for 'element of' (e.g. y \\in \\mathbb{R}), \\mathbb{R} for real numbers, \\mathbb{N} for natural numbers, \\mathbb{Z} for integers, \\varnothing or \\emptyset for empty set, \\le for less than or equal to, \\ge for greater than or equal to, and \\times for multiplication. - NEVER use LaTeX escape sequences for Turkish characters (like \\i, \\c{c}, \\u{g}). Write them natively as UTF-8 inside \\text{} (e.g. ı, İ, ş, Ş, ç, Ç, ğ, Ğ, ö, Ö, ü, Ü). Example: |x| \\le 2 \\iff -2 \\le x \\le 2 \\text{ olup bu aralıkta } 2 - (-2) + 1 = 5 \\text{ tane...} - CRITICAL VISUAL RULE: When you see ANY sign (a roof, a hat, OR a small closed triangle) placed directly OVER multiple letters (e.g., positioned over ABC or BAC), you MUST use \\widehat{ABC}. Do NOT place \\triangle or \\angle BEFORE the letters. ALWAYS use \\widehat{...} to place the symbol OVER the letters! - Use align environments for multi-line equations if needed."
                 }
             ]
         }]
@@ -216,7 +216,9 @@ function handleOcrImage(file) {
                 .replace(/==>/g, ' \\Rightarrow ')
                 .replace(/=>/g, ' \\Rightarrow ')
                 .replace(/->/g, ' \\rightarrow ')
-                .replace(/<-/g, ' \\leftarrow ');
+                .replace(/<-/g, ' \\leftarrow ')
+                // Yapay zeka harflerin başına \triangle koymuşsa otomatik olarak tepesine çatı \widehat{...} olarak geçir
+                .replace(/\\triangle\s*\{?([A-Z]{3})\}?/g, '\\widehat{$1}');
 
             setMathfieldValue(latex);
             updatePreview();
