@@ -44,9 +44,10 @@ if (ocrSelectFileLink) {
     };
 }
 
-// Clicking the dropzone container itself does nothing to prevent file selection window
+// Clicking the dropzone container focuses it so it can receive paste events, without opening file selector
 ocrDropzone.onclick = (e) => {
     e.stopPropagation();
+    ocrDropzone.focus();
 };
 
 ocrFileInput.onchange = (e) => {
@@ -70,8 +71,8 @@ ocrDropzone.ondrop = (e) => {
     }
 };
 
-// Document-wide paste handler in capture phase to intercept screenshot pastes even if inputs/math-field are focused
-document.addEventListener('paste', (e) => {
+// Paste handler bound directly to ocrDropzone, meaning it only intercepts when the dropzone has focus (been clicked)
+ocrDropzone.addEventListener('paste', (e) => {
     const items = e.clipboardData.items || [];
     for (let item of items) {
         if (item.type.indexOf('image') !== -1) {
@@ -84,7 +85,7 @@ document.addEventListener('paste', (e) => {
             }
         }
     }
-}, true);
+});
 
 function handleOcrImage(file) {
     selectedOcrFile = file;
