@@ -225,7 +225,14 @@ function parse(tokens) {
                 return checkSubSup({ type: 'underbrace', content });
             } else if (tok.val === '\\drawsvg') {
                 const content = parseArgument();
-                const rawSvg = getRawStringFromNodes(content);
+                let rawSvg = getRawStringFromNodes(content);
+                // MathLive LaTeX çıktısı (getValue) üretirken XML etiketlerindeki <, >, = gibi karakterlerin arasına
+                // matematiksel ifade sanıp boşluklar koyar. (Örn: < rect x = "50" / >). SVG'yi bozmaması için bunları temizliyoruz.
+                rawSvg = rawSvg.replace(/<\s+/g, '<');       // "< rect" -> "<rect"
+                rawSvg = rawSvg.replace(/\s+>/g, '>');       // "rect >" -> "rect>"
+                rawSvg = rawSvg.replace(/<\/\s+/g, '</');    // "</ text>" -> "</text>"
+                rawSvg = rawSvg.replace(/\/\s+>/g, '/>');    // "/ >" -> "/>"
+                rawSvg = rawSvg.replace(/\s*=\s*"/g, '="');  // "width = \"50\"" -> "width=\"50\""
                 return checkSubSup({ type: 'custom-html', html: rawSvg });
             } else {
                 return checkSubSup({ type: 'command', val: tok.val });

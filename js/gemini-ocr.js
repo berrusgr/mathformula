@@ -110,6 +110,12 @@ function handleOcrImage(file) {
         ocrPreviewImage.src = e.target.result;
         ocrPrompt.classList.add('hidden');
         ocrPreviewContainer.classList.remove('hidden');
+        
+        // Yeni görsel eklendiğinde ek kurallar kutusunu temizle
+        const extraPromptInput = document.getElementById('ocrExtraPrompt');
+        if (extraPromptInput) {
+            extraPromptInput.value = '';
+        }
     };
     reader.readAsDataURL(file);
 }
