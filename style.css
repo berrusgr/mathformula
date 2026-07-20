@@ -442,7 +442,7 @@ math-field::part(virtual-keyboard-toggle) {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    vertical-align: middle;
+    vertical-align: baseline;
     margin: 0 0.15em;
 }
 
