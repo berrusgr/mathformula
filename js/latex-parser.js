@@ -223,6 +223,10 @@ function parse(tokens) {
             } else if (tok.val === '\\underbrace') {
                 const content = parseArgument();
                 return checkSubSup({ type: 'underbrace', content });
+            } else if (tok.val === '\\drawsvg') {
+                const content = parseArgument();
+                const rawSvg = getRawStringFromNodes(content);
+                return checkSubSup({ type: 'custom-html', html: rawSvg });
             } else {
                 return checkSubSup({ type: 'command', val: tok.val });
             }
@@ -609,6 +613,29 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
             default:
                 return '';
         }
+    }).join('');
+}
+
+function getRawStringFromNodes(nodes) {
+    if (!nodes) return '';
+    return nodes.map(node => {
+        if (!node) return '';
+        if (node.type === 'text') {
+            return node.val;
+        } else if (node.type === 'command') {
+            if (node.val === '\\ ') return ' ';
+            if (node.val === '\\\\') return '\n';
+            return node.val;
+        } else if (node.type === 'group') {
+            return '{' + getRawStringFromNodes(node.content) + '}';
+        } else if (node.type === 'text-group') {
+            return '\\text{' + getRawStringFromNodes(node.content) + '}';
+        } else if (node.type === 'frac') {
+            return '\\frac{' + getRawStringFromNodes(node.num) + '}{' + getRawStringFromNodes(node.den) + '}';
+        } else if (node.type === 'custom-html') {
+            return node.html;
+        }
+        return '';
     }).join('');
 }
 

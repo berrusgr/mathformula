@@ -93,6 +93,7 @@ const colorGrid = document.getElementById('colorGrid');
 const hexInput = document.getElementById('hexInput');
 const designPreviewContainer = document.getElementById('designPreviewContainer');
 const bgOptionGrid = document.getElementById('bgOptionGrid');
+const customHtmlPreview = document.getElementById('customHtmlPreview');
 
 // Initial setup for color display
 colorDisplay.style.backgroundColor = currentColor;
@@ -281,9 +282,15 @@ renderMode.onchange = () => {
     if (renderMode.value === 'mathjax') {
         fontSelectWrapper.style.opacity = '0.5';
         fontFamily.disabled = true;
+        mf.classList.remove('hidden');
+        if (customHtmlPreview) customHtmlPreview.classList.add('hidden');
     } else {
         fontSelectWrapper.style.opacity = '1';
         fontFamily.disabled = false;
+        if (document.activeElement !== mf) {
+            mf.classList.add('hidden');
+            if (customHtmlPreview) customHtmlPreview.classList.remove('hidden');
+        }
     }
     updatePreview();
 };
@@ -389,6 +396,15 @@ function updatePreview() {
     mf.style.fontSize = sizeVal + "px";
     mf.style.textAlign = currentAlignment;
 
+    // Render beautiful custom HTML preview if container exists
+    if (customHtmlPreview) {
+        customHtmlPreview.style.color = currentColor;
+        customHtmlPreview.style.fontSize = sizeVal + "px";
+        customHtmlPreview.style.textAlign = currentAlignment;
+        const fontName = (mode === 'custom') ? selectedFont : 'Times New Roman';
+        customHtmlPreview.innerHTML = compileLatexToHtml(latexRaw, fontName, sizeVal, currentColor);
+    }
+
     // Update formulaWrapper flex alignment classes dynamically on preview updates
     const formulaWrapper = document.getElementById('formulaWrapper');
     if (formulaWrapper) {
@@ -437,6 +453,35 @@ function updatePreview() {
         applyFontToMathField(''); // clear shadow overrides
     }
 }
+
+// Toggle editor view and preview rendering
+mf.addEventListener('focus', () => {
+    mf.classList.remove('hidden');
+    if (customHtmlPreview) customHtmlPreview.classList.add('hidden');
+});
+
+mf.addEventListener('blur', () => {
+    setTimeout(() => {
+        if (document.activeElement === mf) return;
+        if (renderMode.value === 'custom') {
+            mf.classList.add('hidden');
+            if (customHtmlPreview) {
+                customHtmlPreview.classList.remove('hidden');
+                updatePreview();
+            }
+        }
+    }, 150);
+});
+
+// Click container to focus
+designPreviewContainer.onclick = (e) => {
+    if (e.target.closest('#zoomInBtn, #zoomOutBtn, #zoomResetBtn')) return;
+    if (renderMode.value === 'custom') {
+        mf.classList.remove('hidden');
+        if (customHtmlPreview) customHtmlPreview.classList.add('hidden');
+    }
+    mf.focus();
+};
 
 // Double-ended synchronization (MathLive <-> Textarea)
 mf.addEventListener('input', () => {
