@@ -71,8 +71,11 @@ ocrDropzone.ondrop = (e) => {
     }
 };
 
-// Paste handler bound directly to ocrDropzone, meaning it only intercepts when the dropzone has focus (been clicked)
-ocrDropzone.addEventListener('paste', (e) => {
+// Paste handler bound to document (to bypass browser paste limits on non-editable elements) but only active when ocrDropzone is focused
+document.addEventListener('paste', (e) => {
+    if (document.activeElement !== ocrDropzone) {
+        return;
+    }
     const items = e.clipboardData.items || [];
     for (let item of items) {
         if (item.type.indexOf('image') !== -1) {
