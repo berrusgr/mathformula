@@ -44,10 +44,9 @@ if (ocrSelectFileLink) {
     };
 }
 
-// Clicking the dropzone container focuses it so it can receive paste events, without opening file selector
+// Clicking the dropzone container itself does nothing to prevent file selection window
 ocrDropzone.onclick = (e) => {
     e.stopPropagation();
-    ocrDropzone.focus();
 };
 
 ocrFileInput.onchange = (e) => {
@@ -71,21 +70,17 @@ ocrDropzone.ondrop = (e) => {
     }
 };
 
-// Paste handler bound to document (to bypass browser paste limits on non-editable elements) but only active when ocrDropzone is focused
+// Document-wide paste handler
 document.addEventListener('paste', (e) => {
-    if (document.activeElement !== ocrDropzone) {
+    if (document.activeElement === latexInput || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
         return;
     }
-    const items = e.clipboardData.items || [];
+    const items = e.clipboardData.items;
     for (let item of items) {
         if (item.type.indexOf('image') !== -1) {
             const file = item.getAsFile();
-            if (file) {
-                handleOcrImage(file);
-                e.preventDefault();
-                e.stopPropagation();
-                break;
-            }
+            handleOcrImage(file);
+            break;
         }
     }
 });
