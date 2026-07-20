@@ -70,20 +70,21 @@ ocrDropzone.ondrop = (e) => {
     }
 };
 
-// Document-wide paste handler
+// Document-wide paste handler in capture phase to intercept screenshot pastes even if inputs/math-field are focused
 document.addEventListener('paste', (e) => {
-    if (document.activeElement === latexInput || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
-        return;
-    }
-    const items = e.clipboardData.items;
+    const items = e.clipboardData.items || [];
     for (let item of items) {
         if (item.type.indexOf('image') !== -1) {
             const file = item.getAsFile();
-            handleOcrImage(file);
-            break;
+            if (file) {
+                handleOcrImage(file);
+                e.preventDefault();
+                e.stopPropagation();
+                break;
+            }
         }
     }
-});
+}, true);
 
 function handleOcrImage(file) {
     selectedOcrFile = file;
