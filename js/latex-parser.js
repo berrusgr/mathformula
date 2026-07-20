@@ -608,7 +608,7 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                 return `<span class="math-symbol" style="font-family: inherit;">${mappedChar}</span>`;
 
             case 'custom-html':
-                return node.html;
+                return `<span class="math-custom-html" style="display:inline-block; vertical-align:middle; line-height:0; margin: 0 4px; max-width:100%;">${node.html}</span>`;
 
             default:
                 return '';
