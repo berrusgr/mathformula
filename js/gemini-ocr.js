@@ -85,6 +85,24 @@ document.addEventListener('paste', (e) => {
     }
 });
 
+// Also bind a paste handler directly to mf (MathLive) to intercept image pastes when it is focused
+if (mf) {
+    mf.addEventListener('paste', (e) => {
+        const items = e.clipboardData.items || [];
+        for (let item of items) {
+            if (item.type.indexOf('image') !== -1) {
+                const file = item.getAsFile();
+                if (file) {
+                    handleOcrImage(file);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    break;
+                }
+            }
+        }
+    });
+}
+
 function handleOcrImage(file) {
     selectedOcrFile = file;
     const reader = new FileReader();
