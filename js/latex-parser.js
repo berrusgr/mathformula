@@ -220,6 +220,9 @@ function parse(tokens) {
             } else if (tok.val === '\\mathbb') {
                 const content = parseArgument();
                 return checkSubSup({ type: 'mathbb', content });
+            } else if (tok.val === '\\underbrace') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'underbrace', content });
             } else {
                 return checkSubSup({ type: 'command', val: tok.val });
             }
@@ -374,6 +377,17 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                 </div>`;
 
             case 'sub':
+                if (node.base && node.base.length === 1 && node.base[0].type === 'underbrace') {
+                    const underbraceNode = node.base[0];
+                    const contentHtml = renderNodesToHtml(underbraceNode.content, isNormalText, fontFace);
+                    const subHtml = renderNodesToHtml(node.sub, isNormalText, fontFace);
+                    const svgHtml = `<svg class="math-underbrace-svg" viewBox="0 0 100 12" preserveAspectRatio="none"><path d="M 0,1 C 5,1 5,6 10,6 L 43,6 C 47,6 47,11 50,11 C 53,11 53,6 57,6 L 90,6 C 95,6 95,1 100,1" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"></path></svg>`;
+                    return `<div class="math-underbrace-wrap">
+                        <div class="math-underbrace-content">${contentHtml}</div>
+                        <div class="math-underbrace-symbol">${svgHtml}</div>
+                        <div class="math-underbrace-sub">${subHtml}</div>
+                    </div>`;
+                }
                 if (isLimitOperator(node.base)) {
                     return `<div class="math-limits-op-wrap">
                         <span class="math-limit-base">${renderNodesToHtml(node.base, isNormalText, fontFace)}</span>
@@ -398,6 +412,19 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                 </span>`;
 
             case 'subsup':
+                if (node.base && node.base.length === 1 && node.base[0].type === 'underbrace') {
+                    const underbraceNode = node.base[0];
+                    const contentHtml = renderNodesToHtml(underbraceNode.content, isNormalText, fontFace);
+                    const subHtml = renderNodesToHtml(node.sub, isNormalText, fontFace);
+                    const supHtml = renderNodesToHtml(node.sup, isNormalText, fontFace);
+                    const svgHtml = `<svg class="math-underbrace-svg" viewBox="0 0 100 12" preserveAspectRatio="none"><path d="M 0,1 C 5,1 5,6 10,6 L 43,6 C 47,6 47,11 50,11 C 53,11 53,6 57,6 L 90,6 C 95,6 95,1 100,1" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"></path></svg>`;
+                    return `<div class="math-underbrace-wrap">
+                        <sup class="math-limit-top">${supHtml}</sup>
+                        <div class="math-underbrace-content">${contentHtml}</div>
+                        <div class="math-underbrace-symbol">${svgHtml}</div>
+                        <div class="math-underbrace-sub">${subHtml}</div>
+                    </div>`;
+                }
                 if (isLimitOperator(node.base)) {
                     return `<div class="math-limits-op-wrap">
                         <sup class="math-limit-top">${renderNodesToHtml(node.sup, isNormalText, fontFace)}</sup>
@@ -412,6 +439,16 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                         <sub class="math-sub">${renderNodesToHtml(node.sub, isNormalText, fontFace)}</sub>
                     </span>
                 </span>`;
+
+            case 'underbrace':
+                {
+                    const contentHtml = renderNodesToHtml(node.content, isNormalText, fontFace);
+                    const svgHtml = `<svg class="math-underbrace-svg" viewBox="0 0 100 12" preserveAspectRatio="none"><path d="M 0,1 C 5,1 5,6 10,6 L 43,6 C 47,6 47,11 50,11 C 53,11 53,6 57,6 L 90,6 C 95,6 95,1 100,1" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"></path></svg>`;
+                    return `<div class="math-underbrace-wrap">
+                        <div class="math-underbrace-content">${contentHtml}</div>
+                        <div class="math-underbrace-symbol">${svgHtml}</div>
+                    </div>`;
+                }
 
             case 'root':
                 const rootContentHtml = renderNodesToHtml(node.content, isNormalText, fontFace);
@@ -591,7 +628,7 @@ function compileLatexToHtml(latex, fontFace, size, color) {
         const tokens = tokenize(cleanLatex);
         const ast = parse(tokens);
         const mathHtml = renderNodesToHtml(ast, false, fontFace);
-        const result = `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color}; display: block; text-align: ${currentAlignment}; width: max-content;">
+        const result = `<div class="math-render-root" style="font-family: '${fontFace}', sans-serif; font-size: ${size}px; color: ${color}; display: block; text-align: ${currentAlignment}; width: max-content; white-space: nowrap;">
             ${mathHtml}
         </div>`;
         if (compileCache.size > 100) {

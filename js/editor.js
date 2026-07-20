@@ -487,6 +487,7 @@ document.getElementById('downloadBtn').onclick = () => {
     exportWrapper.style.zIndex = '-9999';
     exportWrapper.style.display = 'inline-block';
     exportWrapper.style.padding = '40px';
+    exportWrapper.style.whiteSpace = 'nowrap';
 
     // Apply chosen PNG background
     if (currentBgColor === 'transparent') {
