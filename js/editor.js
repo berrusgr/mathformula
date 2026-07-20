@@ -52,14 +52,14 @@ const tooltips = {
     "\\vec{\\square}": "Kısa vektör oku ekleyebilirsiniz.",
     "\\widehat{\\square}": "Üzeri geniş çatı (açı/üçgen) şablonu ekleyebilirsiniz.",
     "\\text{\\square}": "Düz metin kutusu ekleyebilirsiniz.",
-    "+": "Artı", "-": "Eksi", "\\times": "Çarpı", ".": "Çarpı Noktası", "\\div": "Bölü", ":": "Bölü İşareti", 
-    "=": "Eşittir", "\\neq": "Eşit Değildir", "<": "Küçüktür", ">": "Büyüktür", "\\leq": "Küçük Eşittir", "\\geq": "Büyük Eşittir", 
+    "+": "Artı", "-": "Eksi", "\\times": "Çarpı", ".": "Çarpı Noktası", "\\div": "Bölü", ":": "Bölü İşareti",
+    "=": "Eşittir", "\\neq": "Eşit Değildir", "<": "Küçüktür", ">": "Büyüktür", "\\leq": "Küçük Eşittir", "\\geq": "Büyük Eşittir",
     "\\approx": "Yaklaşık Eşittir", "\\cong": "Denktir", "\\equiv": "Denktir (Üç Çizgi)", "\\propto": "Orantılıdır", "\\pm": "Artı Eksi", "\\infty": "Sonsuz", "\\%": "Yüzde", "!": "Faktöriyel",
-    "\\sin": "Sinüs", "\\cos": "Kosinüs", "\\tan": "Tanjant", "\\cot": "Kotanjant", "\\sec": "Sekant", "\\csc": "Kosekant", 
+    "\\sin": "Sinüs", "\\cos": "Kosinüs", "\\tan": "Tanjant", "\\cot": "Kotanjant", "\\sec": "Sekant", "\\csc": "Kosekant",
     "\\arcsin": "Ters Sinüs", "\\arccos": "Ters Kosinüs", "\\arctan": "Ters Tanjant", "\\log": "Logaritma", "\\ln": "Doğal Logaritma", "\\exp": "Eksponansiyel",
-    "\\int": "İntegral", "\\iint": "İki Katlı İntegral", "\\iiint": "Üç Katlı İntegral", "\\oint": "Kapalı Eğri İntegrali", "\\sum": "Toplam (Sigma)", "\\prod": "Çarpım (Pi)", 
+    "\\int": "İntegral", "\\iint": "İki Katlı İntegral", "\\iiint": "Üç Katlı İntegral", "\\oint": "Kapalı Eğri İntegrali", "\\sum": "Toplam (Sigma)", "\\prod": "Çarpım (Pi)",
     "\\lim": "Limit", "\\sup": "Supremum", "\\inf": "İnfimum", "\\frac{d}{dx}": "Türev", "\\partial": "Kısmi Türev", "\\nabla": "Nabla (Gradiyent)",
-    "\\in": "Elemanıdır", "\\notin": "Elemanı Değildir", "\\subset": "Alt Kümesidir", "\\subseteq": "Alt Küme / Eşit", "\\supset": "Kapsar", "\\supseteq": "Kapsar / Eşit", 
+    "\\in": "Elemanıdır", "\\notin": "Elemanı Değildir", "\\subset": "Alt Kümesidir", "\\subseteq": "Alt Küme / Eşit", "\\supset": "Kapsar", "\\supseteq": "Kapsar / Eşit",
     "\\cup": "Birleşim", "\\cap": "Kesişim", "\\setminus": "Fark", "\\emptyset": "Boş Küme", "\\varnothing": "Boş Küme", "\\forall": "Her", "\\exists": "En Az Bir", "\\neg": "Değili (Mantık)", "\\wedge": "Ve", "\\vee": "Veya", "\\Rightarrow": "İse", "\\Leftrightarrow": "Ancak ve Ancak",
     "^\\circ": "Derece", "\\angle": "Açı", "\\perp": "Diklik", "\\parallel": "Paralellik", "\\triangle": "Üçgen", "\\rightarrow": "Sağa Ok", "\\vec{v}": "v Vektörü", "\\overrightarrow{AB}": "AB Vektörü", "\\overline{AB}": "AB Doğru Parçası", "\\sim": "Benzerlik"
 };
@@ -351,18 +351,18 @@ function applyFontToMathField(fontFamilyName) {
 // Utility to wrap latex in block for multiline support
 function setMathfieldValue(latex) {
     let clean = latex.trim();
-    
+
     // Strip existing environments
     if (clean.startsWith('\\begin{gather}')) {
         clean = clean.substring('\\begin{gather}'.length, clean.length - '\\end{gather}'.length).trim();
     } else if (clean.startsWith('\\begin{array}')) {
         clean = clean.replace(/^\\begin\{array\}\{[^}]+\}/, '').replace(/\\end\{array\}$/, '').trim();
     }
-    
+
     // Determine alignment column character
     const alignChar = currentAlignment === 'left' ? 'l' : (currentAlignment === 'right' ? 'r' : 'c');
     clean = `\\begin{array}{${alignChar}} ${clean} \\end{array}`;
-    
+
     mf.setValue(clean.replace(/\\square/g, '\\placeholder{}'));
 }
 
@@ -418,10 +418,10 @@ function updatePreview() {
         if (renderRoot) {
             renderRoot.style.transform = 'none';
             renderRoot.style.transformOrigin = currentAlignment === 'left' ? 'left top' : (currentAlignment === 'right' ? 'right top' : 'center top');
-            
+
             const containerWidth = fontSamplePreview.clientWidth - 24; // 12px padding on each side
             const contentWidth = renderRoot.scrollWidth;
-            
+
             if (contentWidth > containerWidth && containerWidth > 0) {
                 const scale = containerWidth / contentWidth;
                 renderRoot.style.transform = `scale(${scale})`;
@@ -638,7 +638,7 @@ if (submitTextModalBtn) {
             // Kullanıcı "ı" harfinden sonra boşluk bırakmışsa, LaTeX'in bu boşluğu yutmasını engellemek için
             // korumalı LaTeX boşluğuna (\ ) çeviriyoruz.
             const safeTextVal = textVal.replace(/ı /g, 'ı\\ ');
-            
+
             // Metin ifadesini latex \text{...} formatında ekle
             mf.executeCommand(['insert', `\\text{${safeTextVal}}`]);
             updatePreview();
@@ -674,4 +674,39 @@ if (zoomInBtn && zoomOutBtn && zoomResetBtn && formulaWrapper) {
         currentZoom = 1.0;
         applyZoom();
     };
+    // LaTeX Kopyalama Butonu ve Hazır Mıyız Entegrasyonu
+    const copyLatexBtn = document.getElementById('copyLatexBtn');
+    if (copyLatexBtn) {
+        copyLatexBtn.addEventListener('click', () => {
+            const latexCode = mf.getValue('latex');
+            
+            // Panoya kopyala
+            navigator.clipboard.writeText(latexCode).then(() => {
+                const originalText = copyLatexBtn.innerHTML;
+                copyLatexBtn.innerHTML = 'Kopyalandı! ✓';
+                setTimeout(() => {
+                    copyLatexBtn.innerHTML = originalText;
+                }, 1500);
+            });
+
+            // Eğer hazir_miyiz üzerinden açıldıysa otomatik aktar
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: 'latex-export',
+                    latex: latexCode
+                }, '*');
+            }
+        });
+    }
+
+    // Canlı güncelleme köprüsü
+    if (window.opener) {
+        mf.addEventListener('input', () => {
+            window.opener.postMessage({
+                type: 'latex-export',
+                latex: mf.getValue('latex')
+            }, '*');
+        });
+    }
+
 }
