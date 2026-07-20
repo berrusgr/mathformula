@@ -391,18 +391,21 @@ function updatePreview() {
     const selectedFont = fontFamily.value;
     const sizeVal = fontSize.value;
 
+    // Use a fixed size for the on-screen visual design area so it doesn't jump around
+    const displaySize = 32;
+
     // Apply selected styles directly to the interactive workspace math-field
     mf.style.color = currentColor;
-    mf.style.fontSize = sizeVal + "px";
+    mf.style.fontSize = displaySize + "px";
     mf.style.textAlign = currentAlignment;
 
     // Render beautiful custom HTML preview if container exists
     if (customHtmlPreview) {
         customHtmlPreview.style.color = currentColor;
-        customHtmlPreview.style.fontSize = sizeVal + "px";
+        customHtmlPreview.style.fontSize = displaySize + "px";
         customHtmlPreview.style.textAlign = currentAlignment;
         const fontName = (mode === 'custom') ? selectedFont : 'Times New Roman';
-        customHtmlPreview.innerHTML = compileLatexToHtml(latexRaw, fontName, sizeVal, currentColor);
+        customHtmlPreview.innerHTML = compileLatexToHtml(latexRaw, fontName, displaySize, currentColor);
     }
 
     // Update formulaWrapper flex alignment classes dynamically on preview updates
