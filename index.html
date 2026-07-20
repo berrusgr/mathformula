@@ -89,6 +89,13 @@
                 <textarea id="latexInput"
                     class="w-full h-20 p-3 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-sm mb-2 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all"
                     placeholder="Görsel alana yazın veya buraya LaTeX kodu girin..."></textarea>
+                <button id="copyLatexBtn"
+                    class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-750 hover:to-green-750 text-white py-2 rounded-lg hover:shadow-md hover:shadow-green-500/10 active:scale-[0.98] transition-all font-medium text-xs flex justify-center items-center gap-1.5 shadow">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    LaTeX Kodunu Kopyala
+                </button>
             </div>
 
             <!-- Görsel Tasarım & Düzenleme Alanı -->
@@ -272,8 +279,8 @@
                 </div>
             </div>
 
-            <!-- İndirme Butonları (Makul Boyutta Ortalanmış) -->
-            <div class="mt-6 lg:mt-0 pt-4 flex justify-center gap-3">
+            <!-- İndirme Butonu (Makul Boyutta Ortalanmış) -->
+            <div class="mt-6 lg:mt-0 pt-4 flex justify-center">
                 <button id="downloadBtn"
                     class="w-full max-w-[200px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-750 text-white py-2.5 rounded-xl hover:shadow-md hover:shadow-blue-500/10 active:scale-[0.98] transition-all font-medium text-xs flex justify-center items-center gap-1.5 shadow">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
@@ -282,13 +289,6 @@
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     PNG Olarak İndir
-                </button>
-                <button id="copyLatexBtn"
-                    class="w-full max-w-[200px] bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-750 hover:to-green-750 text-white py-2.5 rounded-xl hover:shadow-md hover:shadow-green-500/10 active:scale-[0.98] transition-all font-medium text-xs flex justify-center items-center gap-1.5 shadow">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    LaTeX Kodunu Kopyala
                 </button>
             </div>
         </div>
