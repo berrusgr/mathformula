@@ -250,7 +250,10 @@ function handleOcrImage(file) {
                 .replace(/->/g, ' \\rightarrow ')
                 .replace(/<-/g, ' \\leftarrow ')
                 // Yapay zeka harflerin başına \triangle koymuşsa otomatik olarak tepesine çatı \widehat{...} olarak geçir
-                .replace(/\\triangle\s*\{?([A-Z]{3})\}?/g, '\\widehat{$1}');
+                .replace(/\\triangle\s*\{?([A-Z]{3})\}?/g, '\\widehat{$1}')
+                // Kullanıcının "hspace1cm" gibi hatalı özel direktiflerini standart \hspace{1cm} komutuna çevir
+                .replace(/\\?hspace\s*\{?([0-9\.]+)\s*(cm|mm|px|em)\}?/g, '\\hspace{$1$2}')
+                .replace(/hspace1cm/g, '\\hspace{1cm}');
 
             setMathfieldValue(latex);
             updatePreview();

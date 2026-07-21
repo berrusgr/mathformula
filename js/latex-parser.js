@@ -217,6 +217,9 @@ function parse(tokens) {
             } else if (tok.val === '\\text') {
                 const content = parseArgument();
                 return checkSubSup({ type: 'text-group', content });
+            } else if (tok.val === '\\hspace') {
+                const content = parseArgument();
+                return checkSubSup({ type: 'hspace', content });
             } else if (tok.val === '\\mathbb') {
                 const content = parseArgument();
                 return checkSubSup({ type: 'mathbb', content });
@@ -635,6 +638,12 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                 };
                 const mappedChar = doubleStruck[innerChar] || innerChar;
                 return `<span class="math-symbol" style="font-family: inherit;">${mappedChar}</span>`;
+
+            case 'hspace':
+                let size = getRawStringFromNodes(node.content).trim();
+                if (!size) size = '1em';
+                // Remove LaTeX specific units if they are not CSS valid (though cm, mm, px, em, ex, pt are valid in CSS)
+                return `<span style="display:inline-block; width: ${size};"></span>`;
 
             case 'custom-html':
                 let finalHtml = node.html;
