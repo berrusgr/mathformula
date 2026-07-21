@@ -123,10 +123,21 @@
                     </div>
                 </div>
 
+                <!-- PNG İndir Butonu (Önizleme Alanının Hemen Altında) -->
+                <button id="downloadBtn"
+                    class="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl hover:shadow-blue-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm z-30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    PNG Olarak İndir
+                </button>
+
             </div>
         </div>
 
-        <!-- Sağ Panel: Stil Ayarları ve İndirme Butonu -->
+        <!-- Sağ Panel: Stil Ayarları -->
         <div
             class="w-full lg:w-1/4 h-auto lg:h-full bg-white dark:bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 p-6 overflow-y-auto flex flex-col justify-between relative z-50">
             <div class="space-y-6">
@@ -270,19 +281,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- İndirme Butonu (Makul Boyutta Ortalanmış) -->
-            <div class="mt-6 lg:mt-0 pt-4 flex justify-center">
-                <button id="downloadBtn"
-                    class="w-full max-w-[200px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-750 text-white py-2.5 rounded-xl hover:shadow-md hover:shadow-blue-500/10 active:scale-[0.98] transition-all font-medium text-xs flex justify-center items-center gap-1.5 shadow">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    PNG Olarak İndir
-                </button>
             </div>
         </div>
     </div>
