@@ -142,7 +142,7 @@ function parse(tokens) {
                 return checkSubSup({ type: 'bracket', left: leftBracket, right: rightBracket, content });
             } else if (tok.val === '\\begin') {
                 const envTok = parseArgument();
-                const envName = envTok.map(n => n.val || '').join('');
+                const envName = envTok.map(n => n.val || '').join('').trim();
 
                 // If environment is array, it has a second argument for alignment, e.g. \begin{array}{l}
                 // We must consume it so it doesn't render as content in the first cell!
@@ -161,7 +161,7 @@ function parse(tokens) {
                         const lookaheadIndex = index;
                         index++; // consume \end
                         const endEnv = parseArgument();
-                        const endEnvName = endEnv.map(n => n.val || '').join('');
+                        const endEnvName = endEnv.map(n => n.val || '').join('').trim();
                         if (endEnvName === envName) {
                             depth--;
                             if (depth === 0) {
@@ -362,6 +362,12 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                 if (node.val === '\\lim') {
                     return `<span class="math-operator-large math-lim">lim</span>`;
                 }
+                if (node.val === '\\hline') {
+                    return `<div style="border-bottom: 1.5px solid currentColor; width: 100%; margin: 2px 0;"></div>`;
+                }
+                if (node.val === '\\vspace') {
+                    return `<div style="height: 1em; width: 100%;"></div>`;
+                }
 
                 if (COMMAND_MAPPING[node.val]) {
                     if (node.val.startsWith('\\quad') || node.val.startsWith('\\\\') || node.val.startsWith('\\ ')) {
@@ -546,12 +552,23 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                 }
 
                 const gridHtml = node.rows.map(row => {
+                    let hasHlineTop = false;
+                    if (row.length > 0 && row[0].length > 0 && row[0][0].type === 'command' && row[0][0].val === '\\hline') {
+                        hasHlineTop = true;
+                        row[0].shift(); // remove \hline from the cell
+                    }
+
+                    // Check if it was a standalone hline row
+                    if (row.length === 1 && row[0].length === 0) {
+                        return hasHlineTop ? `<div style="border-bottom: 1.5px solid currentColor; width: 100%; margin: 2px 0;"></div>` : '';
+                    }
+
                     let rowAlign = '';
                     if (node.env === 'gather' || node.env === 'array') {
                         const justifyFlex = currentAlignment === 'left' ? 'flex-start' : (currentAlignment === 'right' ? 'flex-end' : 'center');
                         rowAlign = ` style="justify-content: ${justifyFlex} !important;"`;
                     }
-                    return `<div class="math-matrix-row"${rowAlign}>
+                    const rowHtml = `<div class="math-matrix-row"${rowAlign}>
                         ${row.map(cell => {
                             let cellAlign = '';
                             if (node.env === 'gather' || node.env === 'array') {
@@ -560,6 +577,11 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                             return `<div class="math-matrix-cell"${cellAlign}>${renderNodesToHtml(cell, isNormalText, fontFace)}</div>`;
                         }).join('')}
                     </div>`;
+
+                    let html = '';
+                    if (hasHlineTop) html += `<div style="border-bottom: 1.5px solid currentColor; width: 100%; margin: 2px 0;"></div>`;
+                    html += rowHtml;
+                    return html;
                 }).join('');
 
                 const matrixContent = `<div class="math-matrix"${alignStyle}>${gridHtml}</div>`;
