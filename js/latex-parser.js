@@ -637,7 +637,17 @@ function renderNodesToHtml(nodes, isNormalText = false, fontFace = '') {
                 return `<span class="math-symbol" style="font-family: inherit;">${mappedChar}</span>`;
 
             case 'custom-html':
-                return node.html;
+                let finalHtml = node.html;
+                // Parse <math-latex>...</math-latex> tags inside the HTML string to allow math inside tables/SVGs
+                const mathRegex = /<math-latex>([\s\S]*?)<\/math-latex>/g;
+                finalHtml = finalHtml.replace(mathRegex, (match, latexContent) => {
+                    // Decode HTML entities if any were injected
+                    let cleanLatex = latexContent.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                    const mathTokens = lex(cleanLatex);
+                    const mathNodes = parse(mathTokens);
+                    return `<span style="display:inline-block; font-family: inherit;">${renderNodesToHtml(mathNodes, false, fontFace)}</span>`;
+                });
+                return finalHtml;
 
             default:
                 return '';
