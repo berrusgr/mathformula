@@ -561,13 +561,13 @@ mf.addEventListener('input', () => {
     updatePreview();
 });
 
-// Smart Backspace handler for merging lines inside the array environment
+// Smart keydown handler for merging lines, newlines, and spaces
 mf.addEventListener('keydown', (e) => {
-    if (e.key === 'Backspace') {
+    if (e.key === 'Backspace' || e.key === 'Delete') {
         const latexBefore = mf.getValue('latex');
         setTimeout(() => {
             const latexAfter = mf.getValue('latex');
-            // If Backspace was blocked (e.g. at the start of an array cell)
+            // If key was blocked (e.g. at the start/end of an array cell)
             if (latexBefore === latexAfter) {
                 mf.executeCommand(['insert', '@@MARKER@@']);
                 const withMarker = mf.getValue('latex');
@@ -576,23 +576,51 @@ mf.addEventListener('keydown', (e) => {
                 const markerIdx = withMarker.indexOf('@@MARKER@@');
                 if (markerIdx === -1) return;
 
-                const beforeMarker = withMarker.substring(0, markerIdx);
-                // Strip empty environments like \text{ } and whitespace that MathLive auto-inserts at the start of a cell
-                let tail = beforeMarker.replace(/([\s\{\}]|\\[a-zA-Z]+)+$/, '');
-                
-                if (tail.endsWith('\\\\')) {
-                    const lastSlashIdx = beforeMarker.lastIndexOf('\\\\');
-                    if (lastSlashIdx !== -1) {
-                        let newBefore = beforeMarker.substring(0, lastSlashIdx) + beforeMarker.substring(lastSlashIdx + 2);
-                        let newLatex = newBefore + withMarker.substring(markerIdx + '@@MARKER@@'.length);
-                        newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
-                        
-                        // Decode base64 HTML back to raw before passing to setMathfieldValue (which encodes it again)
-                        newLatex = decodeDrawSvg(newLatex);
-                        setMathfieldValue(newLatex);
-                        updatePreview();
+                if (e.key === 'Backspace') {
+                    const beforeMarker = withMarker.substring(0, markerIdx);
+                    // Strip empty environments and whitespace
+                    let tail = beforeMarker.replace(/([\s\{\}]|\\[a-zA-Z]+)+$/, '');
+                    
+                    if (tail.endsWith('\\\\')) {
+                        const lastSlashIdx = beforeMarker.lastIndexOf('\\\\');
+                        if (lastSlashIdx !== -1) {
+                            let newBefore = beforeMarker.substring(0, lastSlashIdx) + beforeMarker.substring(lastSlashIdx + 2);
+                            let newLatex = newBefore + withMarker.substring(markerIdx + '@@MARKER@@'.length);
+                            newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
+                            newLatex = decodeDrawSvg(newLatex);
+                            setMathfieldValue(newLatex);
+                            updatePreview();
+                        }
+                    }
+                } else if (e.key === 'Delete') {
+                    const afterMarker = withMarker.substring(markerIdx + '@@MARKER@@'.length);
+                    // Strip closing braces and whitespace
+                    let tail = afterMarker.replace(/^([\}\s]+)/, '');
+                    
+                    if (tail.startsWith('\\\\')) {
+                        const firstSlashIdx = afterMarker.indexOf('\\\\');
+                        if (firstSlashIdx !== -1) {
+                            let newAfter = afterMarker.substring(0, firstSlashIdx) + afterMarker.substring(firstSlashIdx + 2);
+                            let newLatex = withMarker.substring(0, markerIdx) + newAfter;
+                            newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
+                            newLatex = decodeDrawSvg(newLatex);
+                            setMathfieldValue(newLatex);
+                            updatePreview();
+                        }
                     }
                 }
+            }
+        }, 10);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        mf.executeCommand(['insert', '\\\\ ']); // Inserts double backslash newline
+    } else if (e.key === ' ') {
+        const latexBefore = mf.getValue('latex');
+        setTimeout(() => {
+            const latexAfter = mf.getValue('latex');
+            // If MathLive blocked the space because it's in Math Mode, force insert a LaTeX space
+            if (latexBefore === latexAfter) {
+                mf.executeCommand(['insert', '\\ ']);
             }
         }, 10);
     }
@@ -741,21 +769,6 @@ document.getElementById('downloadBtn').onclick = () => {
             btn.innerHTML = originalText;
             showError("MathJax formülü oluşturamadı.");
         });
-    }
-};
-
-// Newline and Space utility buttons listeners
-document.getElementById('addNewlineBtn').onclick = () => {
-    if (mf) {
-        mf.focus();
-        mf.executeCommand(['insert', '\\\\ ']); // Inserts double backslash newline
-    }
-};
-
-document.getElementById('addSpaceBtn').onclick = () => {
-    if (mf) {
-        mf.focus();
-        mf.executeCommand(['insert', '\\ ']); // Inserts LaTeX space
     }
 };
 
