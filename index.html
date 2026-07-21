@@ -86,16 +86,19 @@
                 <label
                     class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">LaTeX
                     Kodu (İzleme ve Manuel Giriş)</label>
-                <textarea id="latexInput"
-                    class="w-full h-20 p-3 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-sm mb-2 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all"
-                    placeholder="Görsel alana yazın veya buraya LaTeX kodu girin..."></textarea>
-                <button id="copyLatexBtn"
-                    class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-750 hover:to-green-750 text-white py-2 rounded-lg hover:shadow-md hover:shadow-green-500/10 active:scale-[0.98] transition-all font-medium text-xs flex justify-center items-center gap-1.5 shadow">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    LaTeX Kodunu Kopyala
-                </button>
+                <div class="flex gap-2 items-stretch">
+                    <textarea id="latexInput"
+                        class="flex-grow h-14 p-2.5 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-xs text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm transition-all resize-none"
+                        placeholder="Görsel alana yazın veya buraya LaTeX kodu girin..."></textarea>
+                    <button id="copyLatexBtn"
+                        class="shrink-0 px-4 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-xl hover:shadow-md hover:shadow-green-500/10 active:scale-[0.98] transition-all font-semibold text-xs flex items-center justify-center gap-1.5 shadow"
+                        title="LaTeX Kodunu Kopyala">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                        <span>Kopyala</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Görsel Tasarım & Düzenleme Alanı -->
@@ -122,18 +125,6 @@
                         <button id="zoomInBtn" class="w-8 h-8 rounded-lg bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center text-sm font-bold text-slate-650 dark:text-slate-350 hover:scale-105 active:scale-95 transition-all" title="Yakınlaştır">+</button>
                     </div>
                 </div>
-
-                <!-- PNG İndir Butonu (Önizleme Alanının Hemen Altında) -->
-                <button id="downloadBtn"
-                    class="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl hover:shadow-blue-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm z-30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    PNG Olarak İndir
-                </button>
-
             </div>
         </div>
 
@@ -181,6 +172,17 @@
                             Önizleme):</span>
                         <div class="w-full overflow-hidden flex justify-center py-1" id="fontSampleText"></div>
                     </div>
+
+                    <!-- PNG İndir Butonu (PNG Önizleme Kutusunun Hemen Altında) -->
+                    <button id="downloadBtn"
+                        class="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        PNG Olarak İndir
+                    </button>
                 </div>
 
                 <!-- Yazı Boyutu -->

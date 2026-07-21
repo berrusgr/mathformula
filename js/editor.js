@@ -561,6 +561,27 @@ mf.addEventListener('input', () => {
     updatePreview();
 });
 
+// Helper to set MathLive value and preserve/restore cursor focus at @@CURSOR@@
+function setMathfieldValueWithCursor(latex, cursorMarker = '@@CURSOR@@') {
+    let clean = latex.trim();
+    const hasMarker = clean.includes(cursorMarker);
+    if (hasMarker) {
+        clean = clean.replace(cursorMarker, '\\placeholder{}');
+    }
+
+    setMathfieldValue(clean);
+
+    mf.focus();
+    if (hasMarker) {
+        setTimeout(() => {
+            mf.focus();
+            mf.executeCommand('moveToNextPlaceholder');
+            mf.executeCommand(['insert', '']);
+            updatePreview();
+        }, 10);
+    }
+}
+
 // Helper to check if cursor is currently inside a \text{...} block
 function isInsideTextBlock(beforeMarker) {
     const lastTextIdx = beforeMarker.lastIndexOf('\\text{');
@@ -593,16 +614,15 @@ mf.addEventListener('keydown', (e) => {
 
         let newLatex = '';
         if (isInsideTextBlock(beforeMarker)) {
-            // Split current \text{} block cleanly without leaving leading spaces on the new line
-            newLatex = cleanBefore + '} \\\\ \\text{' + cleanAfter;
+            // Split current \text{} block cleanly and place cursor at start of new line
+            newLatex = cleanBefore + '} \\\\ \\text{@@CURSOR@@' + cleanAfter;
         } else {
-            newLatex = cleanBefore + ' \\\\ ' + cleanAfter;
+            newLatex = cleanBefore + ' \\\\ @@CURSOR@@ ' + cleanAfter;
         }
 
         newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
         newLatex = decodeDrawSvg(newLatex);
-        setMathfieldValue(newLatex);
-        updatePreview();
+        setMathfieldValueWithCursor(newLatex);
         return;
     }
 
@@ -627,11 +647,10 @@ mf.addEventListener('keydown', (e) => {
                         const lastSlashIdx = beforeMarker.lastIndexOf('\\\\');
                         if (lastSlashIdx !== -1) {
                             let newBefore = beforeMarker.substring(0, lastSlashIdx) + beforeMarker.substring(lastSlashIdx + 2);
-                            let newLatex = newBefore + ' ' + withMarker.substring(markerIdx + '@@MARKER@@'.length);
+                            let newLatex = newBefore + ' @@CURSOR@@ ' + withMarker.substring(markerIdx + '@@MARKER@@'.length);
                             newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
                             newLatex = decodeDrawSvg(newLatex);
-                            setMathfieldValue(newLatex);
-                            updatePreview();
+                            setMathfieldValueWithCursor(newLatex);
                         }
                     }
                 } else if (e.key === 'Delete') {
@@ -641,12 +660,11 @@ mf.addEventListener('keydown', (e) => {
                     if (tail.trimStart().startsWith('\\\\')) {
                         const firstSlashIdx = afterMarker.indexOf('\\\\');
                         if (firstSlashIdx !== -1) {
-                            let newAfter = afterMarker.substring(0, firstSlashIdx) + ' ' + afterMarker.substring(firstSlashIdx + 2);
+                            let newAfter = afterMarker.substring(0, firstSlashIdx) + ' @@CURSOR@@ ' + afterMarker.substring(firstSlashIdx + 2);
                             let newLatex = withMarker.substring(0, markerIdx) + newAfter;
                             newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
                             newLatex = decodeDrawSvg(newLatex);
-                            setMathfieldValue(newLatex);
-                            updatePreview();
+                            setMathfieldValueWithCursor(newLatex);
                         }
                     }
                 }
@@ -658,7 +676,9 @@ mf.addEventListener('keydown', (e) => {
             const latexAfter = mf.getValue('latex');
             // If MathLive blocked the space because it's in Math Mode, force insert a LaTeX space
             if (latexBefore === latexAfter) {
+                mf.focus();
                 mf.executeCommand(['insert', '\\ ']);
+                mf.focus();
                 updatePreview();
             }
         }, 10);
