@@ -368,9 +368,58 @@ function applyFontToMathField(fontFamilyName) {
     `;
 }
 
+// Base64 helpers for UTF-8 HTML safety
+function utf8ToBase64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+}
+function base64ToUtf8(str) {
+    return decodeURIComponent(escape(atob(str)));
+}
+
+// Encode the contents of \drawsvg{...} to Base64 to prevent MathLive from corrupting HTML
+function encodeDrawSvg(latex) {
+    let result = '';
+    let i = 0;
+    while (i < latex.length) {
+        if (latex.startsWith('\\drawsvg{', i)) {
+            result += '\\drawsvg{';
+            i += '\\drawsvg{'.length;
+            let braceCount = 1;
+            let contentStart = i;
+            while (i < latex.length && braceCount > 0) {
+                if (latex[i] === '{') braceCount++;
+                else if (latex[i] === '}') braceCount--;
+                i++;
+            }
+            let content = latex.substring(contentStart, i - 1);
+            result += utf8ToBase64(content) + '}';
+        } else {
+            result += latex[i];
+            i++;
+        }
+    }
+    return result;
+}
+
+// Decode Base64 back to HTML for latexInput and PNG preview
+function decodeDrawSvg(latex) {
+    // Regex for macro matching (MathLive might add spaces around the argument)
+    return latex.replace(/\\drawsvg\s*\{([^}]+)\}/g, (match, b64) => {
+        try {
+            let cleanB64 = b64.replace(/\\/g, '').replace(/\s+/g, ''); // Remove spaces and backslashes added by MathLive
+            return '\\drawsvg{' + base64ToUtf8(cleanB64) + '}';
+        } catch(e) {
+            return match; // fallback
+        }
+    });
+}
+
 // Utility to wrap latex in block for multiline support
 function setMathfieldValue(latex) {
     let clean = latex.trim();
+
+    // Encode any HTML/SVG content before feeding to MathLive to prevent AST parsing errors
+    clean = encodeDrawSvg(clean);
 
     // Strip existing environments
     if (clean.startsWith('\\begin{gather}')) {
@@ -389,6 +438,9 @@ function setMathfieldValue(latex) {
 // ====== LIVE PREVIEW & WORKSPACE CONTROLLER ======
 function updatePreview() {
     let latexRaw = mf.getValue('latex');
+
+    // Decode the Base64 HTML content back to a raw string
+    latexRaw = decodeDrawSvg(latexRaw);
 
     // Strip outer environments if present for the user input box
     let cleanLatex = latexRaw;
@@ -517,6 +569,8 @@ document.getElementById('downloadBtn').onclick = () => {
 
     // Syntax/grouping error checks before downloading
     let latexCodeRaw = mf.getValue('latex');
+    latexCodeRaw = decodeDrawSvg(latexCodeRaw);
+
     const leftCount = (latexCodeRaw.match(/\\left/g) || []).length;
     const rightCount = (latexCodeRaw.match(/\\right/g) || []).length;
 
