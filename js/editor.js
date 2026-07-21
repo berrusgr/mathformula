@@ -561,6 +561,43 @@ mf.addEventListener('input', () => {
     updatePreview();
 });
 
+// Smart Backspace handler for merging lines inside the array environment
+mf.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace') {
+        const latexBefore = mf.getValue('latex');
+        setTimeout(() => {
+            const latexAfter = mf.getValue('latex');
+            // If Backspace was blocked (e.g. at the start of an array cell)
+            if (latexBefore === latexAfter) {
+                mf.executeCommand(['insert', '@@MARKER@@']);
+                const withMarker = mf.getValue('latex');
+                mf.executeCommand('undo'); // Remove marker
+
+                const markerIdx = withMarker.indexOf('@@MARKER@@');
+                if (markerIdx === -1) return;
+
+                const beforeMarker = withMarker.substring(0, markerIdx);
+                // Strip empty environments like \text{ } and whitespace that MathLive auto-inserts at the start of a cell
+                let tail = beforeMarker.replace(/([\s\{\}]|\\[a-zA-Z]+)+$/, '');
+                
+                if (tail.endsWith('\\\\')) {
+                    const lastSlashIdx = beforeMarker.lastIndexOf('\\\\');
+                    if (lastSlashIdx !== -1) {
+                        let newBefore = beforeMarker.substring(0, lastSlashIdx) + beforeMarker.substring(lastSlashIdx + 2);
+                        let newLatex = newBefore + withMarker.substring(markerIdx + '@@MARKER@@'.length);
+                        newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
+                        
+                        // Decode base64 HTML back to raw before passing to setMathfieldValue (which encodes it again)
+                        newLatex = decodeDrawSvg(newLatex);
+                        setMathfieldValue(newLatex);
+                        updatePreview();
+                    }
+                }
+            }
+        }, 10);
+    }
+});
+
 latexInput.addEventListener('input', () => {
     let latex = latexInput.value;
     setMathfieldValue(latex);
