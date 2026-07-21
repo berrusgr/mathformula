@@ -561,13 +561,56 @@ mf.addEventListener('input', () => {
     updatePreview();
 });
 
+// Helper to check if cursor is currently inside a \text{...} block
+function isInsideTextBlock(beforeMarker) {
+    const lastTextIdx = beforeMarker.lastIndexOf('\\text{');
+    if (lastTextIdx === -1) return false;
+    const sub = beforeMarker.substring(lastTextIdx + 6);
+    let depth = 1;
+    for (let i = 0; i < sub.length; i++) {
+        if (sub[i] === '{') depth++;
+        else if (sub[i] === '}') depth--;
+    }
+    return depth > 0;
+}
+
 // Smart keydown handler for merging lines, newlines, and spaces
 mf.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        mf.executeCommand(['insert', '@@MARKER@@']);
+        const withMarker = mf.getValue('latex');
+        mf.executeCommand('undo');
+
+        const markerIdx = withMarker.indexOf('@@MARKER@@');
+        if (markerIdx === -1) return;
+
+        const beforeMarker = withMarker.substring(0, markerIdx);
+        const afterMarker = withMarker.substring(markerIdx + '@@MARKER@@'.length);
+
+        const cleanBefore = beforeMarker.trimEnd();
+        const cleanAfter = afterMarker.trimStart();
+
+        let newLatex = '';
+        if (isInsideTextBlock(beforeMarker)) {
+            // Split current \text{} block cleanly without leaving leading spaces on the new line
+            newLatex = cleanBefore + '} \\\\ \\text{' + cleanAfter;
+        } else {
+            newLatex = cleanBefore + ' \\\\ ' + cleanAfter;
+        }
+
+        newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
+        newLatex = decodeDrawSvg(newLatex);
+        setMathfieldValue(newLatex);
+        updatePreview();
+        return;
+    }
+
     if (e.key === 'Backspace' || e.key === 'Delete') {
         const latexBefore = mf.getValue('latex');
         setTimeout(() => {
             const latexAfter = mf.getValue('latex');
-            // If key was blocked (e.g. at the start/end of an array cell)
+            // If key was blocked by MathLive (e.g. at the start/end of an array row boundary)
             if (latexBefore === latexAfter) {
                 mf.executeCommand(['insert', '@@MARKER@@']);
                 const withMarker = mf.getValue('latex');
@@ -578,14 +621,13 @@ mf.addEventListener('keydown', (e) => {
 
                 if (e.key === 'Backspace') {
                     const beforeMarker = withMarker.substring(0, markerIdx);
-                    // Strip empty environments and whitespace
                     let tail = beforeMarker.replace(/([\s\{\}]|\\[a-zA-Z]+)+$/, '');
                     
                     if (tail.endsWith('\\\\')) {
                         const lastSlashIdx = beforeMarker.lastIndexOf('\\\\');
                         if (lastSlashIdx !== -1) {
                             let newBefore = beforeMarker.substring(0, lastSlashIdx) + beforeMarker.substring(lastSlashIdx + 2);
-                            let newLatex = newBefore + withMarker.substring(markerIdx + '@@MARKER@@'.length);
+                            let newLatex = newBefore + ' ' + withMarker.substring(markerIdx + '@@MARKER@@'.length);
                             newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
                             newLatex = decodeDrawSvg(newLatex);
                             setMathfieldValue(newLatex);
@@ -594,13 +636,12 @@ mf.addEventListener('keydown', (e) => {
                     }
                 } else if (e.key === 'Delete') {
                     const afterMarker = withMarker.substring(markerIdx + '@@MARKER@@'.length);
-                    // Strip closing braces and whitespace
-                    let tail = afterMarker.replace(/^([\}\s]+)/, '');
+                    let tail = afterMarker.replace(/^[\}\s]+/, '');
                     
-                    if (tail.startsWith('\\\\')) {
+                    if (tail.trimStart().startsWith('\\\\')) {
                         const firstSlashIdx = afterMarker.indexOf('\\\\');
                         if (firstSlashIdx !== -1) {
-                            let newAfter = afterMarker.substring(0, firstSlashIdx) + afterMarker.substring(firstSlashIdx + 2);
+                            let newAfter = afterMarker.substring(0, firstSlashIdx) + ' ' + afterMarker.substring(firstSlashIdx + 2);
                             let newLatex = withMarker.substring(0, markerIdx) + newAfter;
                             newLatex = newLatex.replace(/\\text\{\s*\}/g, '');
                             newLatex = decodeDrawSvg(newLatex);
@@ -611,9 +652,6 @@ mf.addEventListener('keydown', (e) => {
                 }
             }
         }, 10);
-    } else if (e.key === 'Enter') {
-        e.preventDefault();
-        mf.executeCommand(['insert', '\\\\ ']); // Inserts double backslash newline
     } else if (e.key === ' ') {
         const latexBefore = mf.getValue('latex');
         setTimeout(() => {
@@ -621,6 +659,7 @@ mf.addEventListener('keydown', (e) => {
             // If MathLive blocked the space because it's in Math Mode, force insert a LaTeX space
             if (latexBefore === latexAfter) {
                 mf.executeCommand(['insert', '\\ ']);
+                updatePreview();
             }
         }, 10);
     }
