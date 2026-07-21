@@ -79,6 +79,19 @@ let currentAlignment = "left"; // Default alignment left
 const mf = document.getElementById('mathPreview');
 const latexInput = document.getElementById('latexInput');
 const templateContainer = document.getElementById('templateContainer');
+
+// Görsel tasarım alanında (MathLive editöründe) uzun SVG/HTML kodlarının çirkin görünmesini engellemek için
+// \drawsvg komutuna özel bir makro tanımlıyoruz. Böylece editörde sade bir etiket görünürken, 
+// PNG çıktısında (latex-parser sayesinde) asıl şekil veya tablo çizilir.
+if (mf) {
+    mf.macros = {
+        ...mf.macros,
+        drawsvg: {
+            args: 1,
+            def: '\\text{ [GÖRSEL/TABLO GİZLENDİ] }'
+        }
+    };
+}
 const renderMode = document.getElementById('renderMode');
 const fontFamily = document.getElementById('fontFamily');
 const fontSamplePreview = document.getElementById('fontSamplePreview');
