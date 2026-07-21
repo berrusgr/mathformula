@@ -380,10 +380,15 @@ function base64ToUtf8(str) {
 function encodeDrawSvg(latex) {
     let result = '';
     let i = 0;
+    const regex = /\\drawsvg\s*\{/g;
+    
     while (i < latex.length) {
-        if (latex.startsWith('\\drawsvg{', i)) {
-            result += '\\drawsvg{';
-            i += '\\drawsvg{'.length;
+        regex.lastIndex = i;
+        const match = regex.exec(latex);
+        
+        if (match && match.index === i) {
+            result += match[0];
+            i += match[0].length;
             let braceCount = 1;
             let contentStart = i;
             while (i < latex.length && braceCount > 0) {
